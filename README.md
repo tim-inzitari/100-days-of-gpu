@@ -1,10 +1,10 @@
 # 100 days of CUDA challenge
 
-The challenge started in our Discord channel (https://discord.gg/4Tg4TkJQzE).
+The challenge started in our [Discord channel](https://discord.gg/4Tg4TkJQzE).
 
 Official onboarding guide:
 
-- Join the Discord server and announce you are starting the challenge.
+- Join the [Discord channel](https://discord.gg/4Tg4TkJQzE) and announce you are starting the challenge.
 - Read PMPP (Programming Massively Parallel Processors) if you never heard of CUDA.
 - Check the repos of Lynn and Hamdi for inspiration: https://github.com/1y33/100Days and https://github.com/a-hamdi/cuda/
 - Both Lynn and Hamdi had ZERO knowledge when they started.
