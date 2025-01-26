@@ -61,7 +61,7 @@ Do you want to spend your life think about coding or just code?
 
 ## Participants (80 days badge)
 
-Jensen Huang is watching you
+Jensen Huang would be proud of you
 
 ## Participants (90 days badge)
 
