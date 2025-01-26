@@ -22,15 +22,11 @@ Announce your repo in the Discord channel and we will verify if you actually del
 
 ## Participants (0 days badge)
 
-Why not just give it a try?
-
-## Participants (10 days badge)
-
-Yup, in just 10 days your name can be here
-
 | Name       | Repository                                       | Start date |
 | ---------- | ------------------------------------------------ | ---------- |
 | SwekeR-463 | [Link](https://github.com/SwekeR-463/100kernels) | 2025-01-26 |
+
+## Participants (10 days badge)
 
 ![Badge 10 days](badges/badge_10_days_small.jpeg)
 
