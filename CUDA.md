@@ -20,6 +20,33 @@ Official onboarding guide:
 
 Announce your repo in the Discord channel and we will verify if you actually delivered high quality code consistently. If you did, your name will appear here.
 
+## List of active challanges
+| Name                 | Repository                                                |
+| -------------------- | --------------------------------------------------------- |
+| 1y33                 | [Link](https://github.com/1y33/100Days)                    |
+| a-hamdi              | [Link](https://github.com/a-hamdi/cuda)                   |
+| hkproj               | [Link](https://github.com/hkproj/100-days-of-gpu/blob/main/CUDA.md) |
+| SwekeR-463           | [Link](https://github.com/SwekeR-463/100kernels)          |
+| rajneel18            | [Link](https://github.com/rajneel18/100_CUDA_Kernels)     |
+| sanjivch             | [Link](https://github.com/sanjivch/100-days-of-gpu)       |
+| prateekshukla1108    | [Link](https://github.com/prateekshukla1108/100-daysofcuda) |
+| kmohan321            | [Link](https://github.com/kmohan321/CUDA)                 |
+| psvkaushik           | [Link](https://github.com/psvkaushik/100_Days_CUDA)       |
+| harshkumarchourasia  | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
+| zmusaddique          | [Link](https://github.com/zmusaddique/100daysCUDA/tree/main) |
+| AramBughdaryan       | [Link](https://github.com/AramBughdaryan/cuda)            |
+| Firojpaudel          | [Link](https://github.com/Firojpaudel/100_days_of_CUDA)   |
+| nevernever69         | [Link](https://github.com/nevernever69/100-days-of-cuda)  |
+| derekdeming          | [Link](https://github.com/derekdeming/tinyCuda)           |
+| saurav997            | [Link](https://github.com/saurav997/100DaysOfCuda)        |
+| PredictiveManish     | [Link](https://github.com/PredictiveManish/100days)       |
+| vectorquantized      | [Link](https://github.com/vectorquantized/100daysofcuda)  |
+| khushwant04          | [Link](https://github.com/khushwant04/100-Days-CUDA.git)  |
+| ashwin3005           | [Link](https://github.com/ashwin3005/CUDA)                |
+| RookieLiao           | [Link](https://github.com/RookieLiao/tiny-cuda-examples)  |
+| ashwin3005           | [Link]( https://github.com/mathysgrapotte/100DaysCUDA)                |
+
+
 ## Participants (0 days badge)
 
 | Name       | Repository                                       | Start date |
