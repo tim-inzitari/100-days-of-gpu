@@ -51,10 +51,10 @@ Announce your repo in the Discord channel and we will verify if you actually del
 
 ![Badge 10 days](badges/badge_10_days_small.jpeg)
 
-| Name  | Repository                               | Start date |
-| ----- | ---------------------------------------- | ---------- |
-| Lynn  | [Link](https://github.com/1y33/100Days)  | 2025-01-17 |
-| Hamdi | [Link](https://github.com/a-hamdi/cuda/) | 2025-01-17 |
+| Name    | Repository                               | Start date |
+| ------- | ---------------------------------------- | ---------- |
+| 1y33    | [Link](https://github.com/1y33/100Days)  | 2025-01-17 |
+| a-hamdi | [Link](https://github.com/a-hamdi/cuda/) | 2025-01-17 |
 
 ## Participants (20 days badge)
 
