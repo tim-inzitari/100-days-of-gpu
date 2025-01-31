@@ -39,7 +39,9 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | johannn05 | [Link](https://github.com/johannn05/100DaysCUDA/) |
 | khushwant04        | [Link](https://github.com/khushwant04/100-Days-CUDA) |
 | kmohan321          | [Link](https://github.com/kmohan321/CUDA)           |
+| mathysgrapotte          | [Link](https://github.com/mathysgrapotte/100DaysCUDA/)           |
 | Meeex2          | [Link](https://github.com/Meeex2/cuda/)           |
+| MoAbbasid          | [Link](https://github.com/MoAbbasid/100DaysCUDA/)           |
 | nevernever69       | [Link](https://github.com/nevernever69/100-days-of-cuda) |
 | PredictiveManish   | [Link](https://github.com/PredictiveManish/100days) |
 | prateekshukla1108  | [Link](https://github.com/prateekshukla1108/100-daysofcuda) |
