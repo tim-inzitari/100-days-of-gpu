@@ -29,6 +29,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | arcAman07            | [Link](https://github.com/arcAman07/100-Days-of-GPU-Programming)           |
 | AnkitTsj            | [Link](https://github.com/AnkitTsj/cuda_learning)           |
 | AramBughdaryan     | [Link](https://github.com/AramBughdaryan/cuda)     |
+| aryagxr     | [Link](https://github.com/aryagxr/cuda)     |
 | ashwin3005         | [Link](https://github.com/ashwin3005/CUDA)         |
 | asrjy         | [Link](https://github.com/asrjy/gpu)         |
 | bhavyashahh         | [Link](https://github.com/bhavyashahh/nexus-ai/tree/main/projects/bhavya-100-days-of-cuda/)         |
@@ -42,6 +43,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | Meeex2          | [Link](https://github.com/Meeex2/cuda/)           |
 | MoAbbasid          | [Link](https://github.com/MoAbbasid/100DaysCUDA/)           |
 | nevernever69       | [Link](https://github.com/nevernever69/100-days-of-cuda) |
+| Noman-Ali-Bajwa       | [Link](https://github.com/Noman-Ali-Bajwa/100-days-of-cuda/) |
 | PredictiveManish   | [Link](https://github.com/PredictiveManish/100days) |
 | prateekshukla1108  | [Link](https://github.com/prateekshukla1108/100-daysofcuda) |
 | psvkaushik         | [Link](https://github.com/psvkaushik/100_Days_CUDA) |
@@ -50,6 +52,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | RookieLiao         | [Link](https://github.com/RookieLiao/tiny-cuda-examples) |
 | sanjivch           | [Link](https://github.com/sanjivch/100-days-of-gpu) |
 | saurav997          | [Link](https://github.com/saurav997/100DaysOfCuda) |
+| ShlokVFX         | [Link](https://github.com/ShlokVFX/100-days-cuda/)   |
 | SwekeR-463         | [Link](https://github.com/SwekeR-463/100kernels)   |
 | vectorquantized    | [Link](https://github.com/vectorquantized/100daysofcuda) |
 | ysurs    | [Link](https://github.com/ysurs/cuda-100-days) |
