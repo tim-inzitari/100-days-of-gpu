@@ -34,7 +34,6 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | bhavyashahh         | [Link](https://github.com/bhavyashahh/nexus-ai/tree/main/projects/bhavya-100-days-of-cuda/)         |
 | derekdeming        | [Link](https://github.com/derekdeming/tinyCuda)    |
 | Firojpaudel        | [Link](https://github.com/Firojpaudel/100_days_of_CUDA) |
-| hkproj             | [Link](https://github.com/hkproj/100-days-of-gpu/) |
 | harshkumarchourasia| [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
 | johannn05 | [Link](https://github.com/johannn05/100DaysCUDA/) |
 | khushwant04        | [Link](https://github.com/khushwant04/100-Days-CUDA) |
