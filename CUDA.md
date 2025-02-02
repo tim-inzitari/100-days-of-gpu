@@ -33,6 +33,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | ashwin3005         | [Link](https://github.com/ashwin3005/CUDA)         |
 | asrjy         | [Link](https://github.com/asrjy/gpu)         |
 | bhavyashahh         | [Link](https://github.com/bhavyashahh/nexus-ai/tree/main/projects/bhavya-100-days-of-cuda/)         |
+| binarycache         | [Link](https://github.com/binarycache/100-days-of-GPU)         |
 | derekdeming        | [Link](https://github.com/derekdeming/tinyCuda)    |
 | Firojpaudel        | [Link](https://github.com/Firojpaudel/100_days_of_CUDA) |
 | harshkumarchourasia| [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
