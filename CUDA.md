@@ -27,6 +27,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | 1y33               | [Link](https://github.com/1y33/100Days)           |
 | a-hamdi            | [Link](https://github.com/a-hamdi/cuda)           |
 | arcAman07            | [Link](https://github.com/arcAman07/100-Days-of-GPU-Programming)           |
+| AmarnathaGowda            | [Link](https://github.com/AmarnathaGowda/50daysCUDA)           |
 | AnkitTsj            | [Link](https://github.com/AnkitTsj/cuda_learning)           |
 | AramBughdaryan     | [Link](https://github.com/AramBughdaryan/cuda)     |
 | aryagxr     | [Link](https://github.com/aryagxr/cuda)     |
@@ -38,11 +39,14 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | Firojpaudel        | [Link](https://github.com/Firojpaudel/100_days_of_CUDA) |
 | harshkumarchourasia| [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
 | johannn05 | [Link](https://github.com/johannn05/100DaysCUDA/) |
+| jsmidt | [Link](https://github.com/jsmidt/100-days-of-grind) |
 | khushwant04        | [Link](https://github.com/khushwant04/100-Days-CUDA) |
 | kmohan321          | [Link](https://github.com/kmohan321/CUDA)           |
 | mathysgrapotte          | [Link](https://github.com/mathysgrapotte/100DaysCUDA/)           |
 | Meeex2          | [Link](https://github.com/Meeex2/cuda/)           |
 | MoAbbasid          | [Link](https://github.com/MoAbbasid/100DaysCUDA/)           |
+| Monarch-25         | [Link](https://github.com/Monarch-25/100-nights-of-Cuda)           |
+| MZSHAN         | [Link](https://github.com/MZSHAN/iqra/tree/main/100daysCuda)           |
 | nevernever69       | [Link](https://github.com/nevernever69/100-days-of-cuda) |
 | Noman-Ali-Bajwa       | [Link](https://github.com/Noman-Ali-Bajwa/100-days-of-cuda/) |
 | PredictiveManish   | [Link](https://github.com/PredictiveManish/100days) |
