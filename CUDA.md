@@ -58,6 +58,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | sanjivch           | [Link](https://github.com/sanjivch/100-days-of-gpu) |
 | saurav997          | [Link](https://github.com/saurav997/100DaysOfCuda) |
 | ShlokVFX         | [Link](https://github.com/ShlokVFX/100-days-cuda/)   |
+| skj092         | [Link](https://github.com/skj092/cuda-programming)   |
 | SwekeR-463         | [Link](https://github.com/SwekeR-463/100kernels)   |
 | vectorquantized    | [Link](https://github.com/vectorquantized/100daysofcuda) |
 | ysurs    | [Link](https://github.com/ysurs/cuda-100-days) |
