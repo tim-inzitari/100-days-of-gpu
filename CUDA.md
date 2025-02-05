@@ -71,7 +71,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | Udayk02             | [Link](https://github.com/Udayk02/cuda)                                                     |                  |
 | vectorquantized     | [Link](https://github.com/vectorquantized/100daysofcuda)                                    | 🎖️               |
 | ysurs               | [Link](https://github.com/ysurs/cuda-100-days)                                              |                  |
-| zmusaddique         | [Link](https://github.com/zmusaddique/100daysCUDA)                                          |                  |
+| zmusaddique         | [Link](https://github.com/zmusaddique/100daysCUDA)                                          | 🎖️               |
 
 
 
@@ -86,7 +86,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | rajneel18       | [Link](https://github.com/rajneel18/100_CUDA_Kernels)    |
 | SwekeR-463      | [Link](https://github.com/SwekeR-463/100kernels)         |
 | vectorquantized | [Link](https://github.com/vectorquantized/100daysofcuda) |
-
+| zmusaddique     | [Link](https://github.com/zmusaddique/100daysCUDA)       |
 
 ## Participants (20 days badge)
 
