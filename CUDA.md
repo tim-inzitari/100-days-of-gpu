@@ -30,7 +30,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | AmarnathaGowda      | [Link](https://github.com/AmarnathaGowda/50daysCUDA)                                        |                  |
 | AnirudhKashyap511   | [Link](https://github.com/AnirudhKashyap511/100DaysOfCUDA/)                                 |                  |
 | AnkitTsj            | [Link](https://github.com/AnkitTsj/cuda_learning)                                           |                  |
-| AramBughdaryan      | [Link](https://github.com/AramBughdaryan/cuda)                                              |                  |
+| AramBughdaryan      | [Link](https://github.com/AramBughdaryan/cuda)                                              | 🎖️               |
 | arcAman07           | [Link](https://github.com/arcAman07/100-Days-of-GPU-Programming)                            |                  |
 | aryagxr             | [Link](https://github.com/aryagxr/cuda)                                                     |                  |
 | ashwin3005          | [Link](https://github.com/ashwin3005/CUDA)                                                  |                  |
@@ -86,6 +86,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 
 | Name                | Repository                                                  |
 | ------------------- | ------------------------------------------------------------|
+| AramBughdaryan      | [Link](https://github.com/AramBughdaryan/cuda)              |
 | harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
 | johannn05           | [Link](https://github.com/johannn05/100DaysCUDA/)           |
 | kmohan321           | [Link](https://github.com/kmohan321/CUDA)                   |
