@@ -59,7 +59,8 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | nevernever69        | [Link](https://github.com/nevernever69/100-days-of-cuda)                                    |                  |
 | Noman-Ali-Bajwa     | [Link](https://github.com/Noman-Ali-Bajwa/100-days-of-cuda/)                                |                  |
 | p-kris10            | [Link](https://github.com/p-kris10/100DaysofGPU)                                            |                  |
-| prateekshukla1108   | [Link](https://github.com/prateekshukla1108/100-daysofcuda)                                 |                  |
+| palash04            | [Link](https://github.com/palash04/100DaysCUDA)                                             |                  |
+| prateekshukla1108   | [Link](https://github.com/prateekshukla1108/100-daysofcuda)                                 | 🎖️               |
 | PredictiveManish    | [Link](https://github.com/PredictiveManish/100days)                                         |                  |
 | prem-16             | [Link](https://github.com/prem-16/100-days-CUDA-challenge/)                                 |                  |
 | psvkaushik          | [Link](https://github.com/psvkaushik/100_Days_CUDA)                                         | 🎖️               |
@@ -67,7 +68,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | redrodeo03          | [Link](https://github.com/redrodeo03/cuda-kernels/)                                         |                  |
 | RookieLiao          | [Link](https://github.com/RookieLiao/tiny-cuda-examples)                                    |                  |
 | sanjivch            | [Link](https://github.com/sanjivch/100-days-of-gpu)                                         |                  |
-| saurav997           | [Link](https://github.com/saurav997/100DaysOfCuda)                                          |                  |
+| saurav997           | [Link](https://github.com/saurav997/100DaysOfCuda)                                          | 🎖️               |
 | Sayandip170900      | [Link](https://github.com/Sayandip170900/CUDA-Challenge)                                    |                  |
 | ShlokVFX            | [Link](https://github.com/ShlokVFX/100-days-cuda/)                                          |                  |
 | skj092              | [Link](https://github.com/skj092/cuda-programming)                                          |                  |
@@ -83,14 +84,19 @@ Announce your repo in the Discord channel and we will verify if you actually del
 
 ![Badge 10 days](badges/badge_10_days_small.jpeg)
 
-| Name            | Repository                                               |
-| --------------- | -------------------------------------------------------- |
-| johannn05       | [Link](https://github.com/johannn05/100DaysCUDA/)        |
-| kmohan321       | [Link](https://github.com/kmohan321/CUDA)                |
-| rajneel18       | [Link](https://github.com/rajneel18/100_CUDA_Kernels)    |
-| SwekeR-463      | [Link](https://github.com/SwekeR-463/100kernels)         |
-| vectorquantized | [Link](https://github.com/vectorquantized/100daysofcuda) |
-| zmusaddique     | [Link](https://github.com/zmusaddique/100daysCUDA)       |
+| Name                | Repository                                                  |
+| ------------------- | ------------------------------------------------------------|
+| harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
+| johannn05           | [Link](https://github.com/johannn05/100DaysCUDA/)           |
+| kmohan321           | [Link](https://github.com/kmohan321/CUDA)                   |
+| prateekshukla1108   | [Link](https://github.com/prateekshukla1108/100-daysofcuda) | 
+| psvkaushik          | [Link](https://github.com/psvkaushik/100_Days_CUDA)         |
+| rajneel18           | [Link](https://github.com/rajneel18/100_CUDA_Kernels)       |
+| saurav997           | [Link](https://github.com/saurav997/100DaysOfCuda)          |
+| SwekeR-463          | [Link](https://github.com/SwekeR-463/100kernels)            |
+| vectorquantized     | [Link](https://github.com/vectorquantized/100daysofcuda)    |
+| zmusaddique         | [Link](https://github.com/zmusaddique/100daysCUDA)          |
+
 
 ## Participants (20 days badge)
 
