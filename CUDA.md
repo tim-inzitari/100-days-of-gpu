@@ -40,7 +40,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | binarycache         | [Link](https://github.com/binarycache/100-days-of-GPU)                                      |                  |
 | derekdeming         | [Link](https://github.com/derekdeming/tinyCuda)                                             |                  |
 | doudi25             | [Link](https://github.com/doudi25/Triton)                                                   |                  |
-| Firojpaudel         | [Link](https://github.com/Firojpaudel/100_days_of_CUDA)                                     |                  |
+| Firojpaudel         | [Link](https://github.com/Firojpaudel/100_days_of_CUDA)                                     | 🎖️               |
 | harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU)                                 | 🎖️               |
 | jsmidt              | [Link](https://github.com/jsmidt/100-days-of-grind)                                         |                  |
 | johannn05           | [Link](https://github.com/johannn05/100DaysCUDA)                                            | 🎖️               |
@@ -56,7 +56,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | Monarch-25          | [Link](https://github.com/Monarch-25/100-nights-of-Cuda)                                    |                  |
 | Mustafa-Mar3ee      | [Link](https://github.com/Mustafa-Mar3ee/100_days_of_GPU_challenge/)                        |                  |
 | MZSHAN              | [Link](https://github.com/MZSHAN/iqra/tree/main/100daysCuda)                                |                  |
-| nevernever69        | [Link](https://github.com/nevernever69/100-days-of-cuda)                                    |                  |
+| nevernever69        | [Link](https://github.com/nevernever69/100-days-of-cuda)                                    | 🎖️               |
 | Noman-Ali-Bajwa     | [Link](https://github.com/Noman-Ali-Bajwa/100-days-of-cuda/)                                |                  |
 | p-kris10            | [Link](https://github.com/p-kris10/100DaysofGPU)                                            |                  |
 | palash04            | [Link](https://github.com/palash04/100DaysCUDA)                                             |                  |
@@ -71,7 +71,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | saurav997           | [Link](https://github.com/saurav997/100DaysOfCuda)                                          | 🎖️               |
 | Sayandip170900      | [Link](https://github.com/Sayandip170900/CUDA-Challenge)                                    |                  |
 | ShlokVFX            | [Link](https://github.com/ShlokVFX/100-days-cuda/)                                          |                  |
-| skj092              | [Link](https://github.com/skj092/cuda-programming)                                          |                  |
+| skj092              | [Link](https://github.com/skj092/cuda-programming)                                          | 🎖️               |
 | SwekeR-463          | [Link](https://github.com/SwekeR-463/100kernels)                                            | 🎖️               |
 | Udayk02             | [Link](https://github.com/Udayk02/cuda)                                                     |                  |
 | vectorquantized     | [Link](https://github.com/vectorquantized/100daysofcuda)                                    | 🎖️               |
@@ -87,13 +87,16 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | Name                | Repository                                                  |
 | ------------------- | ------------------------------------------------------------|
 | AramBughdaryan      | [Link](https://github.com/AramBughdaryan/cuda)              |
+| Firojpaudel         | [Link](https://github.com/Firojpaudel/100_days_of_CUDA)     |
 | harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
 | johannn05           | [Link](https://github.com/johannn05/100DaysCUDA/)           |
 | kmohan321           | [Link](https://github.com/kmohan321/CUDA)                   |
+| nevernever69        | [Link](https://github.com/nevernever69/100-days-of-cuda)    |
 | prateekshukla1108   | [Link](https://github.com/prateekshukla1108/100-daysofcuda) | 
 | psvkaushik          | [Link](https://github.com/psvkaushik/100_Days_CUDA)         |
 | rajneel18           | [Link](https://github.com/rajneel18/100_CUDA_Kernels)       |
 | saurav997           | [Link](https://github.com/saurav997/100DaysOfCuda)          |
+| skj092              | [Link](https://github.com/skj092/cuda-programming)          |
 | SwekeR-463          | [Link](https://github.com/SwekeR-463/100kernels)            |
 | vectorquantized     | [Link](https://github.com/vectorquantized/100daysofcuda)    |
 | zmusaddique         | [Link](https://github.com/zmusaddique/100daysCUDA)          |
