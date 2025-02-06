@@ -90,7 +90,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | rajneel18       | [Link](https://github.com/rajneel18/100_CUDA_Kernels)    |
 | SwekeR-463      | [Link](https://github.com/SwekeR-463/100kernels)         |
 | vectorquantized | [Link](https://github.com/vectorquantized/100daysofcuda) |
-
+| zmusaddique     | [Link](https://github.com/zmusaddique/100daysCUDA)       |
 
 ## Participants (20 days badge)
 
