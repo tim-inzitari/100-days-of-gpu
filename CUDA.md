@@ -47,7 +47,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | khushwant04         | [Link](https://github.com/khushwant04/100-Days-CUDA)                                        |                  |
 | kmohan321           | [Link](https://github.com/kmohan321/CUDA)                                                   | 🎖️               |
 | kosbeko             | [Link](https://github.com/kosbeko/100DaysGPU)                                               |                  |
-| mananchawla2005     | [Link](https://github.com/mananchawla2005/)                                                 |                  |
+| mananchawla2005     | [Link](https://github.com/mananchawla2005/gpukernels/)                                      |                  |
 | mathysgrapotte      | [Link](https://github.com/mathysgrapotte/100DaysCUDA/)                                      |                  |
 | Meeex2              | [Link](https://github.com/Meeex2/cuda/)                                                     |                  |
 | MoAbbasid           | [Link](https://github.com/MoAbbasid/100DaysCUDA/)                                           |                  |
