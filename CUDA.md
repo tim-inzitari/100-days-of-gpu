@@ -41,37 +41,41 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | derekdeming         | [Link](https://github.com/derekdeming/tinyCuda)                                             |                  |
 | doudi25             | [Link](https://github.com/doudi25/Triton)                                                   |                  |
 | Firojpaudel         | [Link](https://github.com/Firojpaudel/100_days_of_CUDA)                                     |                  |
-| harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU)                                 |                  |
+| harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU)                                 | 🎖️               |
 | jsmidt              | [Link](https://github.com/jsmidt/100-days-of-grind)                                         |                  |
 | johannn05           | [Link](https://github.com/johannn05/100DaysCUDA)                                            | 🎖️               |
 | khushwant04         | [Link](https://github.com/khushwant04/100-Days-CUDA)                                        |                  |
 | kmohan321           | [Link](https://github.com/kmohan321/CUDA)                                                   | 🎖️               |
+| kosbeko             | [Link](https://github.com/kosbeko/100DaysGPU)                                               |                  |
 | mananchawla2005     | [Link](https://github.com/mananchawla2005/)                                                 |                  |
 | mathysgrapotte      | [Link](https://github.com/mathysgrapotte/100DaysCUDA/)                                      |                  |
 | Meeex2              | [Link](https://github.com/Meeex2/cuda/)                                                     |                  |
 | MoAbbasid           | [Link](https://github.com/MoAbbasid/100DaysCUDA/)                                           |                  |
 | ModeEric            | [Link](https://github.com/ModeEric/100-Days-of-CUDA)                                        |                  |
+| MahmoudMohajer      | [Link](https://github.com/MahmoudMohajer/Hundred-Day-GPU-Challenge)                         |                  |
 | Monarch-25          | [Link](https://github.com/Monarch-25/100-nights-of-Cuda)                                    |                  |
 | Mustafa-Mar3ee      | [Link](https://github.com/Mustafa-Mar3ee/100_days_of_GPU_challenge/)                        |                  |
 | MZSHAN              | [Link](https://github.com/MZSHAN/iqra/tree/main/100daysCuda)                                |                  |
 | nevernever69        | [Link](https://github.com/nevernever69/100-days-of-cuda)                                    |                  |
 | Noman-Ali-Bajwa     | [Link](https://github.com/Noman-Ali-Bajwa/100-days-of-cuda/)                                |                  |
+| p-kris10            | [Link](https://github.com/p-kris10/100DaysofGPU)                                            |                  |
 | prateekshukla1108   | [Link](https://github.com/prateekshukla1108/100-daysofcuda)                                 |                  |
 | PredictiveManish    | [Link](https://github.com/PredictiveManish/100days)                                         |                  |
 | prem-16             | [Link](https://github.com/prem-16/100-days-CUDA-challenge/)                                 |                  |
-| psvkaushik          | [Link](https://github.com/psvkaushik/100_Days_CUDA)                                         |                  |
+| psvkaushik          | [Link](https://github.com/psvkaushik/100_Days_CUDA)                                         | 🎖️               |
 | rajneel18           | [Link](https://github.com/rajneel18/100_CUDA_Kernels)                                       | 🎖️               |
 | redrodeo03          | [Link](https://github.com/redrodeo03/cuda-kernels/)                                         |                  |
 | RookieLiao          | [Link](https://github.com/RookieLiao/tiny-cuda-examples)                                    |                  |
 | sanjivch            | [Link](https://github.com/sanjivch/100-days-of-gpu)                                         |                  |
 | saurav997           | [Link](https://github.com/saurav997/100DaysOfCuda)                                          |                  |
+| Sayandip170900      | [Link](https://github.com/Sayandip170900/CUDA-Challenge)                                    |                  |
 | ShlokVFX            | [Link](https://github.com/ShlokVFX/100-days-cuda/)                                          |                  |
 | skj092              | [Link](https://github.com/skj092/cuda-programming)                                          |                  |
 | SwekeR-463          | [Link](https://github.com/SwekeR-463/100kernels)                                            | 🎖️               |
 | Udayk02             | [Link](https://github.com/Udayk02/cuda)                                                     |                  |
 | vectorquantized     | [Link](https://github.com/vectorquantized/100daysofcuda)                                    | 🎖️               |
 | ysurs               | [Link](https://github.com/ysurs/cuda-100-days)                                              |                  |
-| zmusaddique         | [Link](https://github.com/zmusaddique/100daysCUDA)                                          |                  |
+| zmusaddique         | [Link](https://github.com/zmusaddique/100daysCUDA)                                          | 🎖️               |
 
 
 
