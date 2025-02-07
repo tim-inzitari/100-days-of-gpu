@@ -29,6 +29,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | AkashKarnatak       | [Link](https://github.com/AkashKarnatak/100-days-of-cuda/)                                  |                  |
 | Alexey Zaytsev      | [Link](https://xl0.github.io/cuda-100/)                                                     |                  |
 | AmarnathaGowda      | [Link](https://github.com/AmarnathaGowda/50daysCUDA)                                        |                  |
+| ahmedgu2      | [Link](https://github.com/ahmedgu2/cuda_cpp_programming)                                          |                  |
 | AnirudhKashyap511   | [Link](https://github.com/AnirudhKashyap511/100DaysOfCUDA/)                                 |                  |
 | AnkitTsj            | [Link](https://github.com/AnkitTsj/cuda_learning)                                           |                  |
 | AramBughdaryan      | [Link](https://github.com/AramBughdaryan/cuda)                                              | 🎖️               |
