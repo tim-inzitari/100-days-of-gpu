@@ -183,6 +183,10 @@ cython_debug/
 *.pdb
 *.exe
 
+# Executables (files without extensions in src/)
+src/*
+!src/*.*
+
 # CUDA build directories
 /build/
 /dist/
@@ -221,11 +225,6 @@ Thumbs.db
 *.o
 *.ptx
 *.cubin
-
-# Executables
-mat_vec_mul
-mat_mul
-tensor_mul
 
 # Temporary files
 *.tmp
