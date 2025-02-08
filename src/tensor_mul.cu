@@ -5,7 +5,9 @@
 // - std=c++20: Use C++20 language features
 // - use_fast_math: Enable fast math optimizations
 // - Additional compiler flags for OpenMP, PIC, threading, and native architecture
-// compile with:nvcc -O3 -arch=sm_86 -std=c++20 --use_fast_math -Xcompiler "-fopenmp -fPIC -pthread -march=native" tensor_mul.cu -o tensor_mul -lcublas
+// compile with:
+
+//nvcc -O3 -arch=sm_86 -std=c++20 --use_fast_math -Xcompiler "-fopenmp -fPIC -pthread -march=native" -I. tensor_mul.cu -o tensor_mul -lcublas
 
 //------------------------------------------------------------------------------
 // This file contains multiple implementations of tensor multiplication
@@ -43,6 +45,8 @@
 using namespace nvcuda::wmma;
 // Bring experimental WMMA features into scope
 using namespace nvcuda::wmma::experimental;
+// Include the new header
+#include "gpu_utils.cuh"
 
 //------------------------------------------------------------------------------
 // Global constants used throughout the program
@@ -58,17 +62,6 @@ using namespace nvcuda::wmma::experimental;
 #define BLOCK_SIZE_M   32    // Block size for matrix rows (cache line optimization)
 #define BLOCK_SIZE_N   32    // Block size for inner dimension (register optimization)
 #define BLOCK_SIZE_L   32    // Block size for matrix columns (cache line optimization)
-
-//------------------------------------------------------------------------------
-// Structure to store performance metrics for each implementation
-//------------------------------------------------------------------------------
-struct PerfMetrics {
-    float transferTime;  // Time taken for host-to-device transfer in milliseconds
-    float kernelTime;    // Time taken for kernel execution in milliseconds
-    float d2hTime;       // Time taken for device-to-host transfer in milliseconds
-    float totalTime;     // Total time including all operations in milliseconds
-    float gflops;        // Achieved performance in gigaFLOPS
-};
 
 //------------------------------------------------------------------------------
 // File header explaining this is a refactored version containing multiple matrix multiplication implementations
@@ -242,82 +235,6 @@ void cpu_matrix_multiply(float* A, float* B, float* C,
 }
 
 //------------------------------------------------------------------------------
-// Generic GPU test runner function that handles all GPU operations
-// Parameters:
-//   testName: Name of the implementation being tested
-//   kernel: Function pointer to the GPU kernel to execute
-//   h_A, h_B: Input matrices in host memory
-//   h_C: Output matrix in host memory
-//   batch_size, m, n, k, l: Matrix dimensions
-//   grid, block: CUDA kernel launch configuration
-// Returns: Performance metrics for the test run
-//------------------------------------------------------------------------------
-PerfMetrics runGpuTest(const char* testName,
-    void(*kernel)(const float*, const float*, float*, int, int, int, int, int),
-    const float* h_A, const float* h_B, float* h_C,
-    int batch_size, int m, int n, int k, int l,
-    dim3 grid, dim3 block) {
-
-    // Initialize performance metrics structure
-    PerfMetrics pm = {0};
-    float elapsed;
-    // Create CUDA events for timing measurements
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-
-    // Allocate GPU memory for input and output matrices
-    float *d_A, *d_B, *d_C;
-    cudaMalloc((void**)&d_A, batch_size * m * n * sizeof(float));  // Matrix A
-    cudaMalloc((void**)&d_B, batch_size * k * l * sizeof(float));  // Matrix B
-    cudaMalloc((void**)&d_C, batch_size * m * l * sizeof(float));  // Result matrix C
-
-    // Time the host-to-device transfer (H2D)
-    cudaEventRecord(start);
-    cudaMemcpy(d_A, h_A, batch_size * m * n * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, h_B, batch_size * k * l * sizeof(float), cudaMemcpyHostToDevice);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed, start, stop);
-    pm.transferTime = elapsed;  // Store H2D transfer time
-
-    // Time the kernel execution
-    cudaEventRecord(start);
-    kernel<<<grid, block>>>(d_A, d_B, d_C, batch_size, m, n, k, l);  // Launch kernel
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed, start, stop);
-    pm.kernelTime = elapsed;  // Store kernel execution time
-
-    // Time the device-to-host transfer (D2H)
-    cudaEventRecord(start);
-    cudaMemcpy(h_C, d_C, batch_size * m * l * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed, start, stop);
-    pm.d2hTime = elapsed;  // Store D2H transfer time
-
-    // Calculate total time and GFLOPS (floating point operations per second)
-    pm.totalTime = pm.transferTime + pm.kernelTime + pm.d2hTime;
-    // GFLOPS = (2 * elements) / (time in seconds)
-    // Factor of 2 accounts for multiply-add operations
-    pm.gflops = (2.0f * batch_size * m * n * l) / (pm.kernelTime * 1e6f);
-
-    // Clean up GPU resources
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
-
-    // Print performance results
-    printf("%s:\n", testName);
-    printf("   H2D: %.3f ms, Kernel: %.3f ms, D2H: %.3f ms, Total: %.3f ms, GFLOPS: %.2f\n",
-           pm.transferTime, pm.kernelTime, pm.d2hTime, pm.totalTime, pm.gflops);
-    return pm;
-}
-
-//------------------------------------------------------------------------------
 // Test 0: Run naive GPU implementation
 // Parameters:
 //   h_A, h_B: Input matrices
@@ -327,13 +244,26 @@ PerfMetrics runGpuTest(const char* testName,
 //------------------------------------------------------------------------------
 PerfMetrics runTestNaive(const float* h_A, const float* h_B, float* h_C,
                          int batch_size, int m, int n, int k, int l) {
-    // Configure kernel launch parameters
-    dim3 block(32, 32);  // Use 32x32 thread blocks
-    // Calculate grid dimensions to cover entire output matrix
+    dim3 block(32, 32);
     dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
-    // Run the naive implementation using generic test runner
-    return runGpuTest("Test 0: Naive GPU Implementation", tensor_mul,
-                      h_A, h_B, h_C, batch_size, m, n, k, l, grid, block);
+    
+    // Calculate sizes for memory allocation
+    size_t size_A = batch_size * m * n;
+    size_t size_B = batch_size * k * l;
+    size_t size_C = batch_size * m * l;
+    
+    // Calculate FLOPS per thread (2 operations per multiply-add)
+    size_t flops_per_thread = 2 * n;
+    
+    return runGpuTest<float>(
+        "Test 0: Naive GPU Implementation",
+        tensor_mul,
+        h_A, h_B, h_C,
+        size_A, size_B, size_C,
+        grid, block,
+        flops_per_thread,
+        batch_size, m, n, k, l  // Additional kernel parameters
+    );
 }
 
 //------------------------------------------------------------------------------
@@ -346,13 +276,24 @@ PerfMetrics runTestNaive(const float* h_A, const float* h_B, float* h_C,
 //------------------------------------------------------------------------------
 PerfMetrics runTestSharedMemory(const float* h_A, const float* h_B, float* h_C,
                                 int batch_size, int m, int n, int k, int l) {
-    // Configure kernel launch parameters using tile size
-    dim3 block(TILE_SIZE, TILE_SIZE);  // Thread block matches tile size
-    // Calculate grid dimensions based on tile size
+    dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((m + TILE_SIZE - 1) / TILE_SIZE, (l + TILE_SIZE - 1) / TILE_SIZE, batch_size);
-    // Run the shared memory implementation
-    return runGpuTest("Test 2: Shared Memory Implementation", tensor_mul_shared,
-                      h_A, h_B, h_C, batch_size, m, n, k, l, grid, block);
+    
+    size_t size_A = batch_size * m * n;
+    size_t size_B = batch_size * k * l;
+    size_t size_C = batch_size * m * l;
+    
+    size_t flops_per_thread = 2 * n;
+    
+    return runGpuTest<float>(
+        "Test 2: Shared Memory Implementation",
+        tensor_mul_shared,
+        h_A, h_B, h_C,
+        size_A, size_B, size_C,
+        grid, block,
+        flops_per_thread,
+        batch_size, m, n, k, l
+    );
 }
 
 //------------------------------------------------------------------------------
@@ -435,9 +376,21 @@ PerfMetrics runTestVectorized(const float* h_A, const float* h_B, float* h_C,
     dim3 block(32, 32);
     dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
     
-    return runGpuTest("Test 4: Vectorized Implementation",
-                      tensor_mul_vectorized,
-                      h_A, h_B, h_C, batch_size, m, n, k, l, grid, block);
+    size_t size_A = batch_size * m * n;
+    size_t size_B = batch_size * k * l;
+    size_t size_C = batch_size * m * l;
+    
+    size_t flops_per_thread = 2 * n;
+    
+    return runGpuTest<float>(
+        "Test 4: Vectorized Implementation",
+        tensor_mul_vectorized,
+        h_A, h_B, h_C,
+        size_A, size_B, size_C,
+        grid, block,
+        flops_per_thread,
+        batch_size, m, n, k, l
+    );
 }
 
 //------------------------------------------------------------------------------
@@ -445,14 +398,24 @@ PerfMetrics runTestVectorized(const float* h_A, const float* h_B, float* h_C,
 //------------------------------------------------------------------------------
 PerfMetrics runTestWarpOptimized(const float* h_A, const float* h_B, float* h_C,
                                  int batch_size, int m, int n, int k, int l) {
-    // Use 128 threads (4 warps) per block for better occupancy
     dim3 block(256);  // 8 warps per block
-    // Each block handles (4 rows × 32 columns)
     dim3 grid((m + 7)/8, (l + 31)/32, batch_size);
     
-    return runGpuTest("Test 5: Warp-Optimized Implementation", 
-                     tensor_mul_warp_optimized,
-                     h_A, h_B, h_C, batch_size, m, n, k, l, grid, block);
+    size_t size_A = batch_size * m * n;
+    size_t size_B = batch_size * k * l;
+    size_t size_C = batch_size * m * l;
+    
+    size_t flops_per_thread = 2 * n;
+    
+    return runGpuTest<float>(
+        "Test 5: Warp-Optimized Implementation",
+        tensor_mul_warp_optimized,
+        h_A, h_B, h_C,
+        size_A, size_B, size_C,
+        grid, block,
+        flops_per_thread,
+        batch_size, m, n, k, l
+    );
 }
 
 //------------------------------------------------------------------------------
@@ -460,10 +423,24 @@ PerfMetrics runTestWarpOptimized(const float* h_A, const float* h_B, float* h_C,
 //------------------------------------------------------------------------------
 PerfMetrics runTestDoubleBuffered(const float* h_A, const float* h_B, float* h_C,
                                   int batch_size, int m, int n, int k, int l) {
-    dim3 block(32, 32);  // Using 32x32 threads per block
+    dim3 block(32, 32);
     dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
-    return runGpuTest("Test 6: Double-Buffered Implementation", tensor_mul_double_buffered,
-                      h_A, h_B, h_C, batch_size, m, n, k, l, grid, block);
+    
+    size_t size_A = batch_size * m * n;
+    size_t size_B = batch_size * k * l;
+    size_t size_C = batch_size * m * l;
+    
+    size_t flops_per_thread = 2 * n;
+    
+    return runGpuTest<float>(
+        "Test 6: Double-Buffered Implementation",
+        tensor_mul_double_buffered,
+        h_A, h_B, h_C,
+        size_A, size_B, size_C,
+        grid, block,
+        flops_per_thread,
+        batch_size, m, n, k, l
+    );
 }
 
 //------------------------------------------------------------------------------
@@ -477,72 +454,29 @@ PerfMetrics runTestDoubleBuffered(const float* h_A, const float* h_B, float* h_C
 //------------------------------------------------------------------------------
 PerfMetrics runTestTensorCore(const float* h_A, const float* h_B, float* h_C,
                               int batch_size, int m, int n, int k, int l) {
-    PerfMetrics pm = {0};
-    // Tensor Core requires dimensions be multiples of 16.
     if (m % 16 != 0 || n % 16 != 0 || l % 16 != 0) {
         printf("Test 7: Tensor Core Implementation: Skipped (dimensions must be multiples of 16).\n");
-        return pm;
+        return PerfMetrics{0};
     }
     
-    size_t totalA = batch_size * m * n;
-    int totalB = batch_size * n * l;
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    float elapsed;
-
-    // Use the host's float arrays directly.
-    float* d_A;
-    float* d_B;
-    cudaMalloc((void**)&d_A, totalA * sizeof(float));
-    cudaMalloc((void**)&d_B, totalB * sizeof(float));
-
-    cudaEventRecord(start);
-    cudaMemcpy(d_A, h_A, totalA * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, h_B, totalB * sizeof(float), cudaMemcpyHostToDevice);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed, start, stop);
-    pm.transferTime = elapsed;
-    
-    // Allocate device memory for result (reuse d_C allocated in runGpuTest pattern).
-    float* d_C;
-    cudaMalloc((void**)&d_C, batch_size * m * l * sizeof(float));
-    
-    // Launch Tensor Core kernel.
     dim3 block(128, 1);  // 4 warps per block
     dim3 grid((m + 63)/64, (l + 63)/64, batch_size);
-    const size_t shmem_size = 16*16*sizeof(float); // For temp storage
-    cudaEventRecord(start);
-    tensor_mul_tensorcore<<<grid, block, shmem_size>>>((const float*)d_A, (const float*)d_B, d_C,
-                                                      batch_size, m, n, k, l);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed, start, stop);
-    pm.kernelTime = elapsed;
     
-    // Time D2H transfer
-    cudaEventRecord(start);
-    cudaMemcpy(h_C, d_C, batch_size * m * l * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed, start, stop);
-    pm.d2hTime = elapsed;
+    size_t size_A = batch_size * m * n;
+    size_t size_B = batch_size * k * l;
+    size_t size_C = batch_size * m * l;
     
-    pm.totalTime = pm.transferTime + pm.kernelTime + pm.d2hTime;
-    pm.gflops = (2.0f * batch_size * m * n * l) / (pm.kernelTime * 1e6f);
+    size_t flops_per_thread = 2 * n;
     
-    printf("Test 7: Tensor Core Implementation:\n");
-    printf("   H2D: %.3f ms, Kernel: %.3f ms, D2H: %.3f ms, Total: %.3f ms, GFLOPS: %.2f\n",
-           pm.transferTime, pm.kernelTime, pm.d2hTime, pm.totalTime, pm.gflops);
-    
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
-    
-    return pm;
+    return runGpuTest<float>(
+        "Test 7: Tensor Core Implementation",
+        tensor_mul_tensorcore,
+        h_A, h_B, h_C,
+        size_A, size_B, size_C,
+        grid, block,
+        flops_per_thread,
+        batch_size, m, n, k, l
+    );
 }
 
 //------------------------------------------------------------------------------
