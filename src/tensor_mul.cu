@@ -280,6 +280,7 @@ PerfMetrics runTestNaive(const float* h_A, const float* h_B, float* h_C,
                          int batch_size, int m, int n, int k, int l) {
     dim3 block(32, 32);
     dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
+    LaunchConfig config(grid, block);  // Create launch config
     
     size_t size_A = batch_size * m * n;
     size_t size_B = batch_size * k * l;
@@ -291,7 +292,7 @@ PerfMetrics runTestNaive(const float* h_A, const float* h_B, float* h_C,
         tensor_mul,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
-        grid, block,
+        config,  // Pass launch config instead of separate grid and block
         flops_per_thread,
         batch_size, m, n, k, l
     );
@@ -310,10 +311,13 @@ PerfMetrics runTestSharedMemory(const float* h_A, const float* h_B, float* h_C,
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((m + TILE_SIZE - 1) / TILE_SIZE, (l + TILE_SIZE - 1) / TILE_SIZE, batch_size);
     
+    // Calculate shared memory size
+    size_t shared_mem_size = 2 * TILE_SIZE * TILE_SIZE * sizeof(float);
+    LaunchConfig config(grid, block, shared_mem_size);
+    
     size_t size_A = batch_size * m * n;
     size_t size_B = batch_size * k * l;
     size_t size_C = batch_size * m * l;
-    
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
@@ -321,7 +325,7 @@ PerfMetrics runTestSharedMemory(const float* h_A, const float* h_B, float* h_C,
         tensor_mul_shared,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
-        grid, block,
+        config,
         flops_per_thread,
         batch_size, m, n, k, l
     );
@@ -406,11 +410,11 @@ PerfMetrics runTestVectorized(const float* h_A, const float* h_B, float* h_C,
                               int batch_size, int m, int n, int k, int l) {
     dim3 block(32, 32);
     dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
+    LaunchConfig config(grid, block);
     
     size_t size_A = batch_size * m * n;
     size_t size_B = batch_size * k * l;
     size_t size_C = batch_size * m * l;
-    
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
@@ -418,7 +422,7 @@ PerfMetrics runTestVectorized(const float* h_A, const float* h_B, float* h_C,
         tensor_mul_vectorized,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
-        grid, block,
+        config,
         flops_per_thread,
         batch_size, m, n, k, l
     );
@@ -431,11 +435,11 @@ PerfMetrics runTestWarpOptimized(const float* h_A, const float* h_B, float* h_C,
                                  int batch_size, int m, int n, int k, int l) {
     dim3 block(256);  // 8 warps per block
     dim3 grid((m + 7)/8, (l + 31)/32, batch_size);
+    LaunchConfig config(grid, block);
     
     size_t size_A = batch_size * m * n;
     size_t size_B = batch_size * k * l;
     size_t size_C = batch_size * m * l;
-    
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
@@ -443,7 +447,7 @@ PerfMetrics runTestWarpOptimized(const float* h_A, const float* h_B, float* h_C,
         tensor_mul_warp_optimized,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
-        grid, block,
+        config,
         flops_per_thread,
         batch_size, m, n, k, l
     );
@@ -456,11 +460,11 @@ PerfMetrics runTestDoubleBuffered(const float* h_A, const float* h_B, float* h_C
                                   int batch_size, int m, int n, int k, int l) {
     dim3 block(32, 32);
     dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
+    LaunchConfig config(grid, block);
     
     size_t size_A = batch_size * m * n;
     size_t size_B = batch_size * k * l;
     size_t size_C = batch_size * m * l;
-    
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
@@ -468,7 +472,7 @@ PerfMetrics runTestDoubleBuffered(const float* h_A, const float* h_B, float* h_C
         tensor_mul_double_buffered,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
-        grid, block,
+        config,
         flops_per_thread,
         batch_size, m, n, k, l
     );
@@ -493,10 +497,13 @@ PerfMetrics runTestTensorCore(const float* h_A, const float* h_B, float* h_C,
     dim3 block(128, 1);  // 4 warps per block
     dim3 grid((m + 63)/64, (l + 63)/64, batch_size);
     
+    // Calculate shared memory size for partial tile handling
+    size_t shared_mem_size = 16 * 16 * sizeof(float);
+    LaunchConfig config(grid, block, shared_mem_size);
+    
     size_t size_A = batch_size * m * n;
     size_t size_B = batch_size * k * l;
     size_t size_C = batch_size * m * l;
-    
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
@@ -504,7 +511,7 @@ PerfMetrics runTestTensorCore(const float* h_A, const float* h_B, float* h_C,
         tensor_mul_tensorcore,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
-        grid, block,
+        config,
         flops_per_thread,
         batch_size, m, n, k, l
     );

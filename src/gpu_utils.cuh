@@ -12,9 +12,13 @@
 //   PerfMetrics     - Performance measurement data for GPU operations
 //   TestResult      - Test result data including name and metrics
 //   KernelTest      - Test definition for registry system
+//   LaunchConfig    - CUDA kernel launch configuration (grid, block, shared memory)
 //
 // Classes:
 //   TestRegistry    - Test management and execution system
+//
+// Enums:
+//   CompareMode     - Performance comparison modes (BASE_ONLY, VS_CPU)
 //
 // Functions:
 //   runGpuTest      - Run and measure GPU kernel performance
@@ -93,6 +97,43 @@ enum class CompareMode {
 };
 
 //------------------------------------------------------------------------------
+// Launch Configuration Structure Documentation Block
+//------------------------------------------------------------------------------
+// The LaunchConfig struct provides a unified way to specify CUDA kernel launch 
+// parameters including grid dimensions, block dimensions, and shared memory size.
+//
+// Members:
+//   grid: CUDA grid dimensions (dim3)
+//   block: CUDA block dimensions (dim3)
+//   shared_mem: Shared memory size in bytes (default: 0)
+//
+// Usage Example 1 - Basic Configuration:
+//   dim3 block(32, 32);
+//   dim3 grid((width + 31)/32, (height + 31)/32);
+//   LaunchConfig config(grid, block);
+//
+// Usage Example 2 - With Shared Memory:
+//   dim3 block(16, 16);
+//   dim3 grid((width + 15)/16, (height + 15)/16);
+//   size_t shared_mem_size = (block.x + 2*radius) * (block.y + 2*radius) * sizeof(float);
+//   LaunchConfig config(grid, block, shared_mem_size);
+//
+// Notes:
+//   - Grid and block dimensions should be calculated to cover the entire output
+//   - Shared memory size is optional and defaults to 0
+//   - Block size should consider occupancy and hardware limitations
+//------------------------------------------------------------------------------
+
+struct LaunchConfig {
+    dim3 grid;
+    dim3 block;
+    size_t shared_mem = 0;  // Default to 0 for no shared memory
+    
+    LaunchConfig(dim3 g, dim3 b, size_t sm = 0) 
+        : grid(g), block(b), shared_mem(sm) {}
+};
+
+//------------------------------------------------------------------------------
 // Main GPU Test Runner Documentation Block
 //------------------------------------------------------------------------------
 // This template function provides a standardized way to:
@@ -106,7 +147,7 @@ enum class CompareMode {
 //   Args: Variable argument types for additional kernel parameters
 //
 // Function Parameters:
-//   base_name: Base name without number
+//   base_name: Name of the test
 //   kernel: Pointer to the GPU kernel function
 //   h_A: First input array on host
 //   h_B: Second input array on host
@@ -114,10 +155,8 @@ enum class CompareMode {
 //   size_A: Number of elements in first input array
 //   size_B: Number of elements in second input array
 //   size_C: Number of elements in output array
-//   grid: CUDA grid dimensions
-//   block: CUDA block dimensions for kernel launch
+//   config: LaunchConfig containing grid, block, and shared memory configuration
 //   flops_per_thread: Number of floating point operations per thread
-//   test_number: Test number for naming
 //   args: Additional kernel arguments
 //
 // Returns:
@@ -126,6 +165,8 @@ enum class CompareMode {
 // Usage Example 1 - Matrix Multiplication:
 //   dim3 block(32, 32);
 //   dim3 grid((M + 31)/32, (N + 31)/32);
+//   LaunchConfig config(grid, block);
+//   
 //   size_t size_A = M * K;
 //   size_t size_B = K * N;
 //   size_t size_C = M * N;
@@ -136,15 +177,17 @@ enum class CompareMode {
 //       matmul_kernel,
 //       h_A, h_B, h_C,
 //       size_A, size_B, size_C,
-//       grid, block,
+//       config,
 //       flops,
-//       1,  // Test number
 //       M, N, K  // Additional kernel parameters
 //   );
 //
-// Usage Example 2 - Convolution:
+// Usage Example 2 - Convolution with Shared Memory:
 //   dim3 block(16, 16);
 //   dim3 grid((width + 15)/16, (height + 15)/16);
+//   size_t shared_mem_size = (block.x + 2*radius) * (block.y + 2*radius) * sizeof(float);
+//   LaunchConfig config(grid, block, shared_mem_size);
+//   
 //   size_t size_input = width * height;
 //   size_t size_kernel = kernel_width * kernel_height;
 //   size_t size_output = width * height;
@@ -155,9 +198,8 @@ enum class CompareMode {
 //       conv2d_kernel,
 //       h_input, h_kernel, h_output,
 //       size_input, size_kernel, size_output,
-//       grid, block,
+//       config,
 //       flops,
-//       2,  // Test number
 //       width, height, kernel_radius
 //   );
 //
@@ -177,9 +219,10 @@ enum class CompareMode {
 //   - Host memory should be allocated before calling
 //   - All GPU resources are cleaned up before return
 //------------------------------------------------------------------------------
+
 template <typename T, typename... KernelArgs>
 PerfMetrics runGpuTest(
-    const char *base_name,  // Will now be the full numbered name
+    const char *base_name,
     void (*kernel)(const T *, const T *, T *, KernelArgs...),
     const T *h_A,
     const T *h_B,
@@ -187,10 +230,9 @@ PerfMetrics runGpuTest(
     size_t size_A,
     size_t size_B,
     size_t size_C,
-    dim3 grid,
-    dim3 block,
+    const LaunchConfig& config,
     size_t flops_per_thread,
-    KernelArgs... args)  // Remove test_number parameter
+    KernelArgs... args)
 {
     // Initialize performance metrics structure to zero
     PerfMetrics pm = {0};
@@ -228,9 +270,8 @@ PerfMetrics runGpuTest(
 
     // Begin timing kernel execution
     cudaEventRecord(start);
-    // Launch kernel with configured grid and block dimensions
-    kernel<<<grid, block>>>(d_A, d_B, d_C, args...);
-    // Mark end of kernel execution
+    // Launch kernel with configured grid, block and shared memory
+    kernel<<<config.grid, config.block, config.shared_mem>>>(d_A, d_B, d_C, args...);
     cudaEventRecord(stop);
     // Wait for kernel to complete
     cudaEventSynchronize(stop);
@@ -255,7 +296,7 @@ PerfMetrics runGpuTest(
     // Calculate total execution time
     pm.totalTime = pm.transferTime + pm.kernelTime + pm.d2hTime;
     // Calculate total number of threads launched
-    size_t total_threads = grid.x * grid.y * grid.z * block.x * block.y * block.z;
+    size_t total_threads = config.grid.x * config.grid.y * config.grid.z * config.block.x * config.block.y * config.block.z;
     // Calculate GFLOPS (billion floating point operations per second)
     pm.gflops = (flops_per_thread * total_threads) / (pm.kernelTime * 1e6f);
 

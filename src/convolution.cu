@@ -38,7 +38,7 @@ PerfMetrics runSharedMemoryTest(const float*, const float*, float*, int, int, in
 
 // Initialize all tests
 void initializeTests() {
-    conv_tests.addTest("CPU Reference", runCPUTest, true, true);
+    conv_tests.addTest("CPU Reference", runCPUTest, false, true);
     conv_tests.addTest("Naive GPU", runConvolutionTest, true);
     conv_tests.addTest("Shared Memory", runSharedMemoryTest, true);
 }
@@ -97,8 +97,9 @@ __global__ void conv2d_basic_kernel(const float *input, const float *kernel, flo
 PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, float* h_output,
                               int width, int height, int kernel_radius) {
     // Configure kernel launch parameters
-    dim3 block(16, 16);  // 16x16 threads per block
-    dim3 grid((width + 15)/16, (height + 15)/16);  // Grid size to cover image
+    dim3 block(16, 16);
+    dim3 grid((width + block.x - 1)/block.x, (height + block.y - 1)/block.y);
+    LaunchConfig config(grid, block);  // No shared memory
     
     // Calculate memory sizes
     size_t input_size = width * height;
@@ -114,7 +115,7 @@ PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, floa
         conv2d_basic_kernel,
         h_input, h_kernel, h_output,
         input_size, kernel_size, output_size,
-        grid, block,
+        config,
         flops_per_thread,
         kernel_radius, width, height
     );
@@ -157,14 +158,78 @@ void conv2d_cpu_reference(const float* input, const float* kernel, float* output
 // Fix the shared memory kernel declaration
 __global__ void conv2d_shared_kernel(const float* input, const float* kernel, float* output,
                                    int r, int width, int height) {
-    // Implementation coming soon
+    // Shared memory for input tile
+    // Add padding of radius size on each side
+    extern __shared__ float shared_input[];
+    
+    // Calculate thread and block indices
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+    int bx = blockIdx.x * blockDim.x;
+    int by = blockIdx.y * blockDim.y;
+    int x = bx + tx;
+    int y = by + ty;
+    
+    // Calculate dimensions of the shared memory tile
+    const int BLOCK_WIDTH = blockDim.x;
+    const int BLOCK_HEIGHT = blockDim.y;
+    const int TILE_WIDTH = BLOCK_WIDTH + 2 * r;
+    const int TILE_HEIGHT = BLOCK_HEIGHT + 2 * r;
+    
+    // Load input tile into shared memory including halo region
+    for (int row = ty; row < TILE_HEIGHT; row += BLOCK_HEIGHT) {
+        for (int col = tx; col < TILE_WIDTH; col += BLOCK_WIDTH) {
+            int global_row = by + row - r;
+            int global_col = bx + col - r;
+            
+            // Check boundaries and load data
+            if (global_row >= 0 && global_row < height && 
+                global_col >= 0 && global_col < width) {
+                shared_input[row * TILE_WIDTH + col] = 
+                    input[global_row * width + global_col];
+            } else {
+                shared_input[row * TILE_WIDTH + col] = 0.0f;
+            }
+        }
+    }
+    
+    // Ensure all threads have loaded their data
+    __syncthreads();
+    
+    // Compute convolution only for valid output pixels
+    if (x < width && y < height) {
+        float sum = 0.0f;
+        
+        // Perform convolution using shared memory
+        for (int ky = 0; ky < 2*r + 1; ky++) {
+            for (int kx = 0; kx < 2*r + 1; kx++) {
+                // Calculate position in shared memory
+                int shared_row = ty + ky;
+                int shared_col = tx + kx;
+                
+                sum += kernel[ky * (2*r + 1) + kx] * 
+                       shared_input[shared_row * TILE_WIDTH + shared_col];
+            }
+        }
+        
+        // Write output
+        output[y * width + x] = sum;
+    }
 }
 
 PerfMetrics runSharedMemoryTest(const float* h_input, const float* h_kernel, float* h_output,
                                int width, int height, int kernel_radius) {
     // Configure kernel launch parameters
-    dim3 block(16, 16);  // 16x16 threads per block
-    dim3 grid((width + 15)/16, (height + 15)/16);  // Grid size to cover image
+    dim3 block(16, 16);
+    dim3 grid((width + block.x - 1)/block.x, (height + block.y - 1)/block.y);
+    
+    // Calculate shared memory size
+    const int TILE_WIDTH = block.x + 2 * kernel_radius;
+    const int TILE_HEIGHT = block.y + 2 * kernel_radius;
+    size_t shared_mem_size = TILE_WIDTH * TILE_HEIGHT * sizeof(float);
+    
+    // Create launch config with shared memory
+    LaunchConfig config(grid, block, shared_mem_size);
     
     // Calculate memory sizes
     size_t input_size = width * height;
@@ -180,7 +245,7 @@ PerfMetrics runSharedMemoryTest(const float* h_input, const float* h_kernel, flo
         conv2d_shared_kernel,
         h_input, h_kernel, h_output,
         input_size, kernel_size, output_size,
-        grid, block,
+        config,
         flops_per_thread,
         kernel_radius, width, height
     );
