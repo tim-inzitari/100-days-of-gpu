@@ -34,11 +34,15 @@
 //------------------------------------------------------------------------------
 // GPU Performance Metrics Structure Documentation Block
 //------------------------------------------------------------------------------
-// This structure stores timing and performance data for GPU operations.
-// It can be used to analyze and compare different GPU implementations.
-//
 // Usage example:
-//   PerfMetrics metrics = runGpuTest<float>(...);
+//   PerfMetrics metrics = runGpuTest<float>(
+//       "Test Name",
+//       kernel_func,
+//       h_A, h_B, h_C,
+//       size_A, size_B, size_C,
+//       config,  // LaunchConfig with grid, block, and shared memory
+//       flops_per_thread,
+//       additional_args...);  // Update example to use LaunchConfig
 //   printf("Kernel time: %.3f ms\n", metrics.kernelTime);
 //   if (metrics.gflops < expected_gflops) {
 //       printf("Performance below expected threshold\n");
@@ -61,13 +65,12 @@ struct PerfMetrics
 //------------------------------------------------------------------------------
 // Performance Result Structures Documentation Block
 //------------------------------------------------------------------------------
-// These structures provide a standardized way to store and report test results
-// across different implementations. They work together with the test registry
-// system to provide consistent performance reporting.
-//
 // Usage example:
-//   TestResult result = {"GPU Implementation", 
-//       {1.2f, 0.5f, 0.3f, 2.0f, 150.0f}, true};
+//   TestResult result = {
+//       "GPU Implementation", 
+//       {1.2f, 0.5f, 0.3f, 2.0f, 150.0f},  // PerfMetrics
+//       true  // valid
+//   };
 //   if (result.valid) {
 //       printf("Implementation %s achieved %.2f GFLOPS\n", 
 //              result.name, result.metrics.gflops);
