@@ -70,7 +70,7 @@ PerfMetrics runTestTensorCore(const float*, const float*, float*, int, int, int,
 
 // Initialize all tests
 void initializeTests() {
-    tensor_tests.addTest("CPU (OpenMP)", runCPUTest, true, true);
+    tensor_tests.addTest("CPU (OpenMP)", runCPUTest, false, true);
     tensor_tests.addTest("Naive GPU", runTestNaive, true);
     tensor_tests.addTest("Shared Memory", runTestSharedMemory, true);
     tensor_tests.addTest("cuBLAS", runTestCublas, true);

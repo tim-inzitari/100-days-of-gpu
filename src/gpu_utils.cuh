@@ -532,11 +532,12 @@ public:
 
     void addTest(const char* name, PerfMetrics (*run)(Args...), 
                 bool enabled = true, bool isCPU = false) {
-        if (!isCPU || !skip_cpu) {
+        // Only add test if it's enabled and (not a CPU test or CPU tests aren't skipped)
+        if (enabled && (!isCPU || !skip_cpu)) {
             char numbered_name[64];
             snprintf(numbered_name, sizeof(numbered_name), 
                     "Test %d: %s", (int)tests.size(), name);
-            tests.push_back({numbered_name, run, enabled, isCPU});
+            tests.push_back({numbered_name, run, true, isCPU});  // Always true since we only add enabled tests
         }
     }
 
@@ -547,8 +548,6 @@ public:
         bool first = true;
 
         for (const auto& test : tests) {
-            if (!test.enabled) continue;
-
             PerfMetrics pm = test.run(args...);
             TestResult result = {test.name.c_str(), pm, true};
             current_test++;  // Increment after each test
