@@ -2,6 +2,25 @@
 
 #include <cuda_runtime.h>
 #include <stdio.h>
+#include <vector>
+
+//------------------------------------------------------------------------------
+// Contents
+//------------------------------------------------------------------------------
+// Structures:
+//   PerfMetrics     - Performance measurement data for GPU operations
+//   TestResult      - Test result data including name and metrics
+//   KernelTest      - Test definition for registry system
+//
+// Classes:
+//   TestRegistry    - Test management and execution system
+//
+// Functions:
+//   runGpuTest      - Run and measure GPU kernel performance
+//   checkResults    - Compare and validate implementation results
+//   printPerformanceSummary - Format and display test results
+//
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // Global Configuration Flags
@@ -35,6 +54,44 @@ struct PerfMetrics
     float totalTime;
     // Computational throughput in billion floating point operations per second
     float gflops;
+};
+
+//------------------------------------------------------------------------------
+// Performance Result Structures Documentation Block
+//------------------------------------------------------------------------------
+// These structures provide a standardized way to store and report test results
+// across different implementations. They work together with the test registry
+// system to provide consistent performance reporting.
+//
+// Usage example:
+//   TestResult result = {"GPU Implementation", 
+//       {1.2f, 0.5f, 0.3f, 2.0f, 150.0f}, true};
+//   if (result.valid) {
+//       printf("Implementation %s achieved %.2f GFLOPS\n", 
+//              result.name, result.metrics.gflops);
+//   }
+//------------------------------------------------------------------------------
+struct TestResult {
+    const char* name;      // Implementation name for reporting
+    PerfMetrics metrics;   // Performance measurements
+    bool valid;            // Whether this result should be included in summary
+};
+
+//------------------------------------------------------------------------------
+// Performance Summary Modes
+//------------------------------------------------------------------------------
+// Defines different modes for comparing and reporting performance results.
+// BASE_ONLY compares all implementations against a baseline implementation.
+// VS_CPU additionally includes comparisons against a CPU reference implementation.
+//
+// Usage example:
+//   printPerformanceSummary<CompareMode::VS_CPU>(
+//       "Matrix Multiplication", "1024x1024",
+//       results, num_results, baseline, cpu_result);
+//------------------------------------------------------------------------------
+enum class CompareMode {
+    BASE_ONLY,  // Compare implementations against baseline only
+    VS_CPU      // Show comparisons against both baseline and CPU
 };
 
 //------------------------------------------------------------------------------
@@ -337,65 +394,8 @@ float checkResults(const T* baseline,      // Reference implementation results
 }
 
 //------------------------------------------------------------------------------
-// Performance Result Structures and Summary Functions
+// Performance Summary Printer
 //------------------------------------------------------------------------------
-// These utilities provide a standardized way to store and report performance
-// results across different GPU implementations.
-//
-// Usage Example 1 - Basic Performance Summary:
-//   TestResult baseline = {"Naive GPU", naive_metrics, true};
-//   TestResult results[] = {
-//       {"Shared Memory", shared_metrics, true},
-//       {"Optimized", opt_metrics, true}
-//   };
-//   char dimensions[256];
-//   snprintf(dimensions, sizeof(dimensions), "Matrix: %d x %d", M, N);
-//   printPerformanceSummary<CompareMode::BASE_ONLY>(
-//       "Matrix Multiplication", dimensions,
-//       results, 2, baseline);
-//
-// Usage Example 2 - With CPU Comparisons:
-//   TestResult cpu_result = {"CPU (OpenMP)", cpu_metrics, true};
-//   printPerformanceSummary<CompareMode::VS_CPU>(
-//       "Tensor Multiplication", dimensions,
-//       results, num_results, baseline, &cpu_result);
-//------------------------------------------------------------------------------
-
-// Structure to store implementation results and metadata
-struct TestResult {
-    const char* name;      // Implementation name for reporting
-    PerfMetrics metrics;   // Performance measurements
-    bool valid;            // Whether this result should be included in summary
-};
-
-//------------------------------------------------------------------------------
-// Performance Summary Printer (Templated Version)
-//------------------------------------------------------------------------------
-// This templated function allows flexible performance reporting with optional
-// CPU comparison modes and customizable baseline selection.
-//
-// Template Parameters:
-//   CompareMode: Enum to specify comparison mode
-//      BASE_ONLY - Compare all against baseline
-//      VS_CPU    - Show both baseline and CPU comparisons
-//
-// Usage Example 1 - GPU Only Comparisons:
-//   printPerformanceSummary<CompareMode::BASE_ONLY>(
-//       "Matrix Multiplication", dimensions,
-//       results, num_results, baseline);
-//
-// Usage Example 2 - With CPU Comparisons:
-//   printPerformanceSummary<CompareMode::VS_CPU>(
-//       "Tensor Multiplication", dimensions,
-//       results, num_results, baseline, cpu_result);
-//------------------------------------------------------------------------------
-
-// Comparison modes for performance summary
-enum class CompareMode {
-    BASE_ONLY,  // Compare implementations against baseline only
-    VS_CPU      // Show comparisons against both baseline and CPU
-};
-
 template<CompareMode Mode>
 inline void printPerformanceSummary(
     const char* title,              // Title for the summary
@@ -470,3 +470,146 @@ inline void printPerformanceSummary(
     }
     printf("\n");
 }
+
+//------------------------------------------------------------------------------
+// Test Registry System Documentation Block
+//------------------------------------------------------------------------------
+// This system provides a flexible framework for registering, managing, and
+// executing different implementations of the same algorithm. It handles test
+// orchestration, result collection, and performance reporting automatically.
+//
+// Template Parameters:
+//   Args: Variable argument types matching the test function signatures
+//
+// Features:
+// - Automatic test registration and management
+// - Consistent performance measurement
+// - Optional CPU reference comparison
+// - Flexible result reporting
+// - Support for enabling/disabling tests
+//
+// Usage Example 1 - Basic GPU Tests:
+//   // Define test registry
+//   using MyTestRegistry = TestRegistry<float*, float*, int, int>;
+//   static MyTestRegistry tests("Algorithm Name");
+//
+//   // Register implementations
+//   tests.addTest("Naive GPU", runBasicTest);
+//   tests.addTest("Optimized", runOptimizedTest);
+//
+//   // Run all tests
+//   tests.runAll(dimensions, data_in, data_out, width, height);
+//
+// Usage Example 2 - With CPU Reference:
+//   // Run CPU implementation
+//   double cpu_time = measureCPUTime(...);
+//   double gflops = calculateGFLOPS(...);
+//   tests.setCPUResult("CPU Reference", cpu_time, gflops);
+//
+//   // Run GPU tests with CPU comparison
+//   tests.runAll(dimensions, data_in, data_out, width, height);
+//
+// Usage Example 3 - Selective Testing:
+//   // Register tests with some disabled
+//   tests.addTest("Basic", runBasicTest);
+//   tests.addTest("Experimental", runExperimentalTest, false);  // disabled
+//   tests.addTest("Optimized", runOptimizedTest);
+//
+// Notes:
+// - First registered test becomes the baseline for comparisons
+// - CPU comparison is optional and controlled by SKIP_CPU_TEST
+// - Tests can be selectively enabled/disabled during registration
+// - Results include timing, GFLOPS, and relative performance metrics
+//------------------------------------------------------------------------------
+
+// Structure to hold information about a single test implementation
+template<typename... Args>
+struct KernelTest {
+    const char* name;                  // Display name of the test
+    PerfMetrics (*run)(Args...);       // Function pointer to test implementation
+    bool enabled;                      // Whether test should be run
+};
+
+// Main test registry class that manages and runs tests
+template<typename... Args>
+class TestRegistry {
+private:
+    std::vector<KernelTest<Args...>> tests;  // Collection of registered tests
+    const char* test_name;                    // Name of the test suite
+    float tolerance;                          // Accuracy tolerance for comparisons
+    TestResult cpu_result = {"", {0}, false}; // Optional CPU reference result
+
+public:
+    // Constructor initializes registry with name and accuracy tolerance
+    TestRegistry(const char* name, float tol = 1e-5f) 
+        : test_name(name), tolerance(tol) {}
+
+    // Register a new test implementation
+    void addTest(const char* name,              // Display name for the test
+                PerfMetrics (*run)(Args...),    // Test implementation function
+                bool enabled = true) {          // Whether test is enabled
+        tests.push_back({name, run, enabled});  // Add test to registry
+    }
+
+    // Run all registered and enabled tests
+    void runAll(const char* dimensions,    // Problem size description
+                Args... args) {            // Arguments for test functions
+        // Storage for test results
+        std::vector<TestResult> results;   // Results from all tests
+        TestResult baseline;               // First test serves as baseline
+        bool first = true;                 // Track first test for baseline
+
+        // Run each registered test
+        for (const auto& test : tests) {
+            if (!test.enabled) continue;   // Skip disabled tests
+
+            // Run the test and store results
+            PerfMetrics pm = test.run(args...);
+            TestResult result = {test.name, pm, true};
+
+            // First test becomes baseline
+            if (first) {
+                baseline = result;
+                first = false;
+            } else {
+                // Store other results for comparison
+                results.push_back(result);
+            }
+        }
+
+        // Print performance summary with appropriate comparison mode
+#if !SKIP_CPU_TEST
+        if (cpu_result.valid) {
+            // Include CPU comparison if CPU result is available
+            printPerformanceSummary<CompareMode::VS_CPU>(
+                test_name, dimensions,
+                results.data(), results.size(),
+                baseline, &cpu_result);
+        } else
+#endif
+        {
+            // Compare against baseline only
+            printPerformanceSummary<CompareMode::BASE_ONLY>(
+                test_name, dimensions,
+                results.data(), results.size(),
+                baseline);
+        }
+    }
+
+    // Add CPU reference implementation results
+    void setCPUResult(const char* name,    // Name for CPU implementation
+                     double time,          // CPU execution time in ms
+                     double gflops) {      // CPU performance in GFLOPS
+        // Create CPU result with timing and performance data
+        cpu_result = {"CPU Reference", 
+            {
+                static_cast<float>(time),  // Total time is CPU execution time
+                0.0f,                      // No kernel time for CPU
+                0.0f,                      // No D2H time for CPU
+                static_cast<float>(time),  // Total time same as execution time
+                static_cast<float>(gflops) // Convert GFLOPS to float
+            }, 
+            true                          // Mark as valid result
+        };
+    }
+};

@@ -915,6 +915,22 @@ __global__ void tensor_mul_tensorcore(const float* A, const float* B, float* C,
 #endif
 }
 
+// Create test registry
+using TensorTestRegistry = TestRegistry<const float*, const float*, float*, 
+                                      int, int, int, int, int>;
+static TensorTestRegistry tensor_tests("Tensor Multiplication");
+
+// In main or initialization:
+void initializeTests() {
+    tensor_tests.addTest("Naive GPU", runTestNaive);
+    tensor_tests.addTest("Shared Memory", runTestSharedMemory);
+    tensor_tests.addTest("cuBLAS", runTestCublas);
+    tensor_tests.addTest("Vectorized", runTestVectorized);
+    tensor_tests.addTest("Warp-Optimized", runTestWarpOptimized);
+    tensor_tests.addTest("Double-Buffered", runTestDoubleBuffered);
+    tensor_tests.addTest("Tensor Core", runTestTensorCore, true);
+}
+
 //------------------------------------------------------------------------------
 // Main: Orchestrate all tests and print a summary.
 //------------------------------------------------------------------------------
@@ -955,97 +971,26 @@ int main(int argc, char** argv) {
     srand(time(NULL));
     initMatrices(h_A, h_B, batch_size, m, n, k, l);
     
-    // Run all tests and compare against baseline (naive GPU implementation)
-    const float tolerance = 1e-5f;
+    initializeTests();
     
-    // Run naive implementation as baseline
-    PerfMetrics pm0 = runTestNaive(h_A, h_B, h_C_baseline, batch_size, m, n, k, l);
-    printf("\n");
-    
-    // Variable to store CPU time if needed
-    double cpu_time = 0.0;
-    
-#if !SKIP_CPU_TEST
-    // Run CPU implementation
-    double t_cpu_start = omp_get_wtime();  // Use OpenMP wall time instead of clock()
-    cpu_matrix_multiply(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    cpu_time = (omp_get_wtime() - t_cpu_start) * 1000.0;  // Convert to milliseconds
-    printf("Test 1: CPU Implementation (OpenMP):\n   Computation: %.3f ms\n", cpu_time);
-    checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 1: CPU Implementation");
-    printf("\n");
-#endif
-    
-    // Run and validate remaining implementations
-    PerfMetrics pm2 = runTestSharedMemory(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 2: Shared Memory Implementation");
-    printf("\n");
-    
-    PerfMetrics pm3 = runTestCublas(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 3: cuBLAS Implementation");
-    printf("\n");
-    
-    PerfMetrics pm4 = runTestVectorized(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 4: Vectorized Implementation");
-    printf("\n");
-    
-    PerfMetrics pm5 = runTestWarpOptimized(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 5: Warp-Optimized Implementation");
-    printf("\n");
-    
-    PerfMetrics pm6 = runTestDoubleBuffered(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 6: Double-Buffered Implementation");
-    printf("\n");
-    
-    PerfMetrics pm7 = runTestTensorCore(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    if (pm7.kernelTime > 0) {  // Only check if tensor core test ran
-        checkResults(h_C_baseline, h_C_temp, total_elements_C, 2e-2f, "Test 7: Tensor Core Implementation");
-    }
-    printf("\n");
-    
-    // Store results
-    TestResult baseline = {"Naive GPU", pm0, true};
-    
-    TestResult results[] = {
-        {"Shared Memory", pm2, true},
-        {"cuBLAS", pm3, true},
-        {"Vectorized", pm4, true},
-        {"Warp-Optimized", pm5, true},
-        {"Double-Buffered", pm6, true},
-        {"Tensor Core", pm7, pm7.kernelTime > 0}
-    };
-
-    // Create dimensions string
     char dimensions[256];
     snprintf(dimensions, sizeof(dimensions), 
              "Tensor Dimensions: [%d × %d × %d] × [%d × %d × %d]",
              batch_size, m, n, batch_size, k, l);
 
-    // Print summary
-    if (!SKIP_CPU_TEST) {
-        // Create CPU result with explicit float casts
-        TestResult cpu_result = {"CPU (OpenMP)", 
-            {
-                static_cast<float>(cpu_time),                    // transferTime
-                0.0f,                                           // kernelTime
-                0.0f,                                           // d2hTime
-                static_cast<float>(cpu_time),                    // totalTime
-                static_cast<float>((2.0 * batch_size * m * n * l) / (cpu_time * 1e6)) // gflops
-            }, 
-            true
-        };
-        
-        // Print summary with CPU comparisons
-        printPerformanceSummary<CompareMode::VS_CPU>(
-            "Tensor Multiplication", dimensions,
-            results, sizeof(results)/sizeof(results[0]),
-            baseline, &cpu_result);
-    } else {
-        // Print summary without CPU comparisons
-        printPerformanceSummary<CompareMode::BASE_ONLY>(
-            "Tensor Multiplication", dimensions,
-            results, sizeof(results)/sizeof(results[0]),
-            baseline);
-    }
+#if !SKIP_CPU_TEST
+    // Run CPU test
+    double cpu_time = 0.0;
+    double t_cpu_start = omp_get_wtime();
+    cpu_matrix_multiply(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
+    cpu_time = (omp_get_wtime() - t_cpu_start) * 1000.0;
+    
+    double gflops = (2.0 * batch_size * m * n * l) / (cpu_time * 1e6);
+    tensor_tests.setCPUResult("CPU (OpenMP)", cpu_time, gflops);
+#endif
+
+    // Run all GPU tests
+    tensor_tests.runAll(dimensions, h_A, h_B, h_C_temp, batch_size, m, n, k, l);
     
     // Cleanup
     free(h_A);

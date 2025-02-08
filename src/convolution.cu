@@ -17,6 +17,27 @@
 #include "gpu_utils.cuh"
 // Include OpenMP for parallel CPU implementation and timing
 #include <omp.h>
+// Add these includes at the top
+#include <vector>
+#include <string>
+
+//------------------------------------------------------------------------------
+// Forward declarations
+//------------------------------------------------------------------------------
+PerfMetrics runConvolutionTest(const float*, const float*, float*, int, int, int);
+PerfMetrics runSharedMemoryTest(const float*, const float*, float*, int, int, int);
+
+//------------------------------------------------------------------------------
+// Test Registry System
+//------------------------------------------------------------------------------
+using ConvTestRegistry = TestRegistry<const float*, const float*, float*, 
+                                    int, int, int>;
+static ConvTestRegistry conv_tests("2D Convolution");
+
+void initializeTests() {
+    conv_tests.addTest("Naive GPU", runConvolutionTest);
+    conv_tests.addTest("Shared Memory", runSharedMemoryTest);
+}
 
 //------------------------------------------------------------------------------
 // Basic GPU Convolution Kernel
@@ -129,6 +150,38 @@ void conv2d_cpu_reference(const float* input, const float* kernel, float* output
     }
 }
 
+// Fix the shared memory kernel declaration
+__global__ void conv2d_shared_kernel(const float* input, const float* kernel, float* output,
+                                   int r, int width, int height) {
+    // Implementation coming soon
+}
+
+PerfMetrics runSharedMemoryTest(const float* h_input, const float* h_kernel, float* h_output,
+                               int width, int height, int kernel_radius) {
+    // Configure kernel launch parameters
+    dim3 block(16, 16);  // 16x16 threads per block
+    dim3 grid((width + 15)/16, (height + 15)/16);  // Grid size to cover image
+    
+    // Calculate memory sizes
+    size_t input_size = width * height;
+    size_t kernel_size = (2*kernel_radius + 1) * (2*kernel_radius + 1);
+    size_t output_size = width * height;
+    
+    // Calculate FLOPS (2 operations per multiply-add)
+    size_t flops_per_thread = 2 * kernel_size;
+    
+    // Launch GPU test
+    return runGpuTest<float>(
+        "Shared Memory Convolution",
+        conv2d_shared_kernel,
+        h_input, h_kernel, h_output,
+        input_size, kernel_size, output_size,
+        grid, block,
+        flops_per_thread,
+        kernel_radius, width, height
+    );
+}
+
 //------------------------------------------------------------------------------
 // Main Function
 // Orchestrates the convolution test:
@@ -183,66 +236,25 @@ int main(int argc, char** argv) {
         h_kernel[i] = (float)(rand()) / RAND_MAX;
     }
 
-    // Run GPU implementation and measure performance
-    PerfMetrics pm = runConvolutionTest(h_input, h_kernel, h_output,
-                                      width, height, kernel_radius);
-
-    // Variable to store CPU time if needed
-    double cpu_time = 0.0;
-
-#if !SKIP_CPU_TEST
-    printf("Running CPU reference implementation...\n");
-    double t_cpu_start = omp_get_wtime();
-    conv2d_cpu_reference(h_input, h_kernel, h_output_cpu, 
-                        width, height, kernel_radius);
-    cpu_time = (omp_get_wtime() - t_cpu_start) * 1000.0;  // Convert to milliseconds
-    printf("CPU Time: %.3f ms\n", cpu_time);
-
-    // Validate GPU results against CPU reference
-    const float tolerance = 1e-5f;
-    checkResults(h_output_cpu,      // CPU reference result
-                h_output,           // GPU result to validate
-                input_size,         // Total number of elements
-                tolerance,          // Maximum allowed difference
-                "2D Convolution"    // Implementation name
-    );
-#endif
-
-    // Store results
-    TestResult baseline = {"Naive GPU", pm, true};
+    initializeTests();
     
-    // Create dimensions string
     char dimensions[256];
     snprintf(dimensions, sizeof(dimensions), 
              "Input size: %d x %d, Kernel: %d x %d",
              width, height, 2*kernel_radius+1, 2*kernel_radius+1);
 
 #if !SKIP_CPU_TEST
-    // Create CPU result
-    TestResult cpu_result = {"CPU Reference", 
-        {
-            static_cast<float>(cpu_time),                // transferTime
-            0.0f,                                       // kernelTime
-            0.0f,                                       // d2hTime
-            static_cast<float>(cpu_time),                // totalTime
-            static_cast<float>((2.0 * width * height * (2*kernel_radius+1) * (2*kernel_radius+1)) / 
-                             (cpu_time * 1e6))          // gflops
-        }, 
-        true
-    };
+    double cpu_time = 0.0;
+    double t_cpu_start = omp_get_wtime();
+    conv2d_cpu_reference(h_input, h_kernel, h_output_cpu, width, height, kernel_radius);
+    cpu_time = (omp_get_wtime() - t_cpu_start) * 1000.0;
     
-    // Print summary with CPU comparison
-    printPerformanceSummary<CompareMode::VS_CPU>(
-        "2D Convolution", dimensions,
-        nullptr, 0,  // No additional implementations yet
-        baseline, &cpu_result);
-#else
-    // Print summary without CPU comparison
-    printPerformanceSummary<CompareMode::BASE_ONLY>(
-        "2D Convolution", dimensions,
-        nullptr, 0,  // No additional implementations yet
-        baseline);
+    double gflops = (2.0 * width * height * (2*kernel_radius+1) * (2*kernel_radius+1)) / 
+                   (cpu_time * 1e6);
+    conv_tests.setCPUResult("CPU Reference", cpu_time, gflops);
 #endif
+
+    conv_tests.runAll(dimensions, h_input, h_kernel, h_output, width, height, kernel_radius);
 
     // Free allocated memory
     free(h_input);
