@@ -169,3 +169,76 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# CUDA binaries and compiled objects
+*.obj
+*.o
+*.so
+*.a
+*.lib
+*.dll
+*.dylib
+*.exp
+*.out
+*.pdb
+*.exe
+
+# CUDA build directories
+/build/
+/dist/
+/Debug/
+/Release/
+/x64/
+/bin/
+/lib/
+/out/
+
+# NVIDIA Cache files
+.nv/
+
+# CMake build artifacts
+CMakeCache.txt
+CMakeFiles/
+/cmake-build-debug/
+/Makefile
+*.cmake
+*.ninja
+*.vcxproj*
+*.sln
+
+# Python virtual environment
+venv/
+.env/
+
+# Logs & OS files
+logs/
+*.log
+*.DS_Store
+Thumbs.db
+
+# CUDA build artifacts
+*.out
+*.o
+*.ptx
+*.cubin
+
+# Executables
+mat_vec_mul
+mat_mul
+tensor_mul
+
+# Temporary files
+*.tmp
+
+# Debug files
+*.debug
+
+# IDE/Editor specific
+.vscode/
+.idea/
+*.swp
+*~
+
+# System specific
+.DS_Store
+Thumbs.db
