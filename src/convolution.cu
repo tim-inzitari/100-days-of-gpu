@@ -99,7 +99,7 @@ __global__ void conv2d_basic_kernel(const float *input, const float *kernel, flo
 PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, float* h_output,
                               int width, int height, int kernel_radius) {
     // Configure kernel launch parameters
-    dim3 block(16, 16);
+    dim3 block(32, 32);
     dim3 grid((width + block.x - 1)/block.x, (height + block.y - 1)/block.y);
     LaunchConfig config(grid, block);  // No shared memory
     
@@ -222,7 +222,7 @@ __global__ void conv2d_shared_kernel(const float* input, const float* kernel, fl
 PerfMetrics runSharedMemoryTest(const float* h_input, const float* h_kernel, float* h_output,
                                int width, int height, int kernel_radius) {
     // Configure kernel launch parameters
-    dim3 block(16, 16);
+    dim3 block(32, 32);
     dim3 grid((width + block.x - 1)/block.x, (height + block.y - 1)/block.y);
     
     // Calculate shared memory size
@@ -320,7 +320,7 @@ PerfMetrics runRegisterTiledTest(const float* h_input, const float* h_kernel,
                                 float* h_output, int width, int height, 
                                 int kernel_radius) {
     // Configure grid and block sizes
-    dim3 block(16, 16);  // Each thread handles 2x2 pixels
+    dim3 block(32, 32);  // Each thread handles 2x2 pixels
     // Divide dimensions by 2 since each thread handles 2x2 pixels
     dim3 grid((width + (block.x * 2) - 1)/(block.x * 2), 
               (height + (block.y * 2) - 1)/(block.y * 2));
