@@ -100,7 +100,7 @@ PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, floa
                               int width, int height, int kernel_radius) {
     // Configure kernel launch parameters
     dim3 block(32, 32);
-    dim3 grid((width + block.x - 1)/block.x, (height + block.y - 1)/block.y);
+    dim3 grid(ceil_div(width, block.x), ceil_div(height, block.y));
     LaunchConfig config(grid, block);  // No shared memory
     
     // Calculate memory sizes
@@ -223,7 +223,7 @@ PerfMetrics runSharedMemoryTest(const float* h_input, const float* h_kernel, flo
                                int width, int height, int kernel_radius) {
     // Configure kernel launch parameters
     dim3 block(32, 32);
-    dim3 grid((width + block.x - 1)/block.x, (height + block.y - 1)/block.y);
+    dim3 grid(ceil_div(width, block.x), ceil_div(height, block.y));
     
     // Calculate shared memory size
     const int TILE_WIDTH = block.x + 2 * kernel_radius;
@@ -320,10 +320,8 @@ PerfMetrics runRegisterTiledTest(const float* h_input, const float* h_kernel,
                                 float* h_output, int width, int height, 
                                 int kernel_radius) {
     // Configure grid and block sizes
-    dim3 block(32, 32);  // Each thread handles 2x2 pixels
-    // Divide dimensions by 2 since each thread handles 2x2 pixels
-    dim3 grid((width + (block.x * 2) - 1)/(block.x * 2), 
-              (height + (block.y * 2) - 1)/(block.y * 2));
+    dim3 block(16, 16);  // Each thread handles 2x2 pixels
+    dim3 grid(ceil_div(width, block.x * 2), ceil_div(height, block.y * 2));
     LaunchConfig config(grid, block);
     
     size_t input_size = width * height;

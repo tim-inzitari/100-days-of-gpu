@@ -75,8 +75,8 @@ int main(int argc, char **argv)
     cudaEventRecord(start);
 
     // Launch the kernel
-    dim3 dimBlock(128);
-    dim3 dimGrid(ceil(n / 128.0f));
+    dim3 dimBlock(256);
+    dim3 dimGrid(ceil_div(n, dimBlock.x));
     mat_vec_mul<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, n);
 
     // Stop timing

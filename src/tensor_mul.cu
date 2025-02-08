@@ -254,7 +254,7 @@ void cpu_matrix_multiply(const float* A, const float* B, float* C,
 PerfMetrics runTestNaive(const float* h_A, const float* h_B, float* h_C,
                          int batch_size, int m, int n, int k, int l) {
     dim3 block(32, 32);
-    dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
+    dim3 grid(ceil_div(m, 32), ceil_div(l, 32), batch_size);
     LaunchConfig config(grid, block);  // Create launch config
     
     size_t size_A = batch_size * m * n;
@@ -284,7 +284,7 @@ PerfMetrics runTestNaive(const float* h_A, const float* h_B, float* h_C,
 PerfMetrics runTestSharedMemory(const float* h_A, const float* h_B, float* h_C,
                                 int batch_size, int m, int n, int k, int l) {
     dim3 block(TILE_SIZE, TILE_SIZE);
-    dim3 grid((m + TILE_SIZE - 1) / TILE_SIZE, (l + TILE_SIZE - 1) / TILE_SIZE, batch_size);
+    dim3 grid(ceil_div(m, TILE_SIZE), ceil_div(l, TILE_SIZE), batch_size);
     
     // Calculate shared memory size
     size_t shared_mem_size = 2 * TILE_SIZE * TILE_SIZE * sizeof(float);
@@ -384,7 +384,7 @@ PerfMetrics runTestCublas(const float* h_A, const float* h_B, float* h_C,
 PerfMetrics runTestVectorized(const float* h_A, const float* h_B, float* h_C,
                               int batch_size, int m, int n, int k, int l) {
     dim3 block(32, 32);
-    dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
+    dim3 grid(ceil_div(m, 32), ceil_div(l, 32), batch_size);
     LaunchConfig config(grid, block);
     
     size_t size_A = batch_size * m * n;
@@ -409,7 +409,7 @@ PerfMetrics runTestVectorized(const float* h_A, const float* h_B, float* h_C,
 PerfMetrics runTestWarpOptimized(const float* h_A, const float* h_B, float* h_C,
                                  int batch_size, int m, int n, int k, int l) {
     dim3 block(256);  // 8 warps per block
-    dim3 grid((m + 7)/8, (l + 31)/32, batch_size);
+    dim3 grid(ceil_div(m, 8), ceil_div(l, 32), batch_size);
     LaunchConfig config(grid, block);
     
     size_t size_A = batch_size * m * n;
@@ -434,7 +434,7 @@ PerfMetrics runTestWarpOptimized(const float* h_A, const float* h_B, float* h_C,
 PerfMetrics runTestDoubleBuffered(const float* h_A, const float* h_B, float* h_C,
                                   int batch_size, int m, int n, int k, int l) {
     dim3 block(32, 32);
-    dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
+    dim3 grid(ceil_div(m, 32), ceil_div(l, 32), batch_size);
     LaunchConfig config(grid, block);
     
     size_t size_A = batch_size * m * n;
@@ -470,7 +470,7 @@ PerfMetrics runTestTensorCore(const float* h_A, const float* h_B, float* h_C,
     }
     
     dim3 block(128, 1);  // 4 warps per block
-    dim3 grid((m + 63)/64, (l + 63)/64, batch_size);
+    dim3 grid(ceil_div(m, 64), ceil_div(l, 64), batch_size);
     
     // Calculate shared memory size for partial tile handling
     size_t shared_mem_size = 16 * 16 * sizeof(float);
@@ -631,7 +631,7 @@ __global__ void tensor_mul_shared(const float* A, const float* B, float* C,
     __shared__ float B_shared[TILE_SIZE][TILE_SIZE];
 
     float sum = 0.0f;
-    int numTiles = (n + TILE_SIZE - 1) / TILE_SIZE;
+    const int numTiles = ceil_div(n, TILE_SIZE);  // Instead of (n + TILE_SIZE - 1) / TILE_SIZE
 
     // Precompute batch offsets.
     int batch_offset_A = batch * m * n;

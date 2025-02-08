@@ -127,8 +127,7 @@ int main(int argc, char **argv)
 
     // Launch the kernel
     dim3 dimBlock(32, 32);  
-    dim3 dimGrid((m + dimBlock.x - 1) / dimBlock.x, 
-                 (l + dimBlock.y - 1) / dimBlock.y);
+    dim3 dimGrid(ceil_div(m, dimBlock.x), ceil_div(l, dimBlock.y));
     mat_mul<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, m, n, k, l);
 
     // Stop timing
@@ -167,8 +166,7 @@ int main(int argc, char **argv)
     cudaEventRecord(start);
 
     dim3 fullBlock(32, 32);
-    dim3 fullGrid((m + fullBlock.x - 1) / fullBlock.x, 
-                  (l + fullBlock.y - 1) / fullBlock.y);
+    dim3 fullGrid(ceil_div(m, fullBlock.x), ceil_div(l, fullBlock.y));
     mat_mul<<<fullGrid, fullBlock>>>(d_A, d_B, d_C, m, n, k, l);
 
     cudaEventRecord(stop);
@@ -182,7 +180,7 @@ int main(int argc, char **argv)
     
     dim3 rowBlock(256);
     for(int i = 0; i < m; i++) {
-        dim3 rowGrid((l + rowBlock.x - 1) / rowBlock.x);
+        dim3 rowGrid(ceil_div(l, rowBlock.x));
         row_output<<<rowGrid, rowBlock>>>(d_A, d_B, d_C, m, n, k, l, i);
     }
     
@@ -197,7 +195,7 @@ int main(int argc, char **argv)
     
     dim3 colBlock(256);
     for(int j = 0; j < l; j++) {
-        dim3 colGrid((m + colBlock.x - 1) / colBlock.x);
+        dim3 colGrid(ceil_div(m, colBlock.x));
         col_output<<<colGrid, colBlock>>>(d_A, d_B, d_C, m, n, k, l, j);
     }
     

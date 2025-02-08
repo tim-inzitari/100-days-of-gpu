@@ -672,3 +672,8 @@ public:
         delete[] baseline_output;
     }
 };
+
+// Add near the top with other utility functions
+__host__ __device__ inline int ceil_div(int n, int d) {
+    return (n + d - 1) / d;
+}
