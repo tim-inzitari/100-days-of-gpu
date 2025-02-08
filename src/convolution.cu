@@ -1,6 +1,7 @@
 #include "gpu_utils.cuh"
 
-__global__ void conv2d_basic_kernel(float *N, float *F, float *P, int r, int width, int height) {
+__global__ void conv2d_basic_kernel(const float *input, const float *kernel, float *output, 
+                                  int r, int width, int height) {
     int outCol = blockIdx.x * blockDim.x + threadIdx.x;
     int outRow = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -13,12 +14,14 @@ __global__ void conv2d_basic_kernel(float *N, float *F, float *P, int r, int wid
             inCol = outCol - r + fCol;
 
             if (inRow>=0 && inRow < height && inCol >= 0 && inCol < width) {
-                Pvalue += F[fRow][fCol] * N[inRow*width + inCol];
+                Pvalue += kernel[fRow*(2*r+1) + fCol] * input[inRow*width + inCol];
             }
         }
     }
 
-    P[outRow][outCol] = Pvalue;
+    if (outRow < height && outCol < width) {
+        output[outRow*width + outCol] = Pvalue;
+    }
 }
 
 PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, float* h_output,
