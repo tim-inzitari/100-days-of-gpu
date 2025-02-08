@@ -53,7 +53,7 @@ struct PerfMetrics
 //   size_B: Number of elements in second input array
 //   size_C: Number of elements in output array
 //   grid: CUDA grid dimensions
-//   block: CUDA block dimensions
+//   block: CUDA block dimensions for kernel launch
 //   flops_per_thread: Number of floating point operations per thread
 //   args: Additional kernel arguments
 //
@@ -226,4 +226,30 @@ PerfMetrics runGpuTest(
 
     // Return performance metrics
     return pm;
+}
+
+//------------------------------------------------------------------------------
+// Utility function to compare results between implementations
+// Parameters:
+//   baseline: Reference result to compare against
+//   test: Result to validate
+//   total_elements: Number of elements to compare
+//   tol: Maximum allowed difference between elements
+//   impl_name: Name of the implementation being tested
+// Returns: Maximum difference found between any pair of elements
+//------------------------------------------------------------------------------
+template <typename T>
+float checkResults(const T* baseline, const T* test, int total_elements, float tol, const char* impl_name = nullptr) {
+    float max_diff = 0.0f;
+    for (int i = 0; i < total_elements; i++) {
+        float diff = fabs(float(baseline[i] - test[i]));
+        max_diff = max(max_diff, diff);
+    }
+    
+    if (impl_name) {
+        printf("%s: Accuracy (max diff: %e)\n", impl_name, max_diff);
+    }
+    printf("   Accuracy Check: %s (max diff: %e)\n", 
+           max_diff <= tol ? "PASSED" : "FAILED", max_diff);
+    return max_diff;
 }
