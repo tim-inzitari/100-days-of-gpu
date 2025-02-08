@@ -1,0 +1,1 @@
+Working on convulutions like we used to do in grad school and learning about more complex kernels this way

@@ -1,0 +1,1 @@
+Modified the tensor mult to do different optimization strategies described in the book and performed performance tests.
