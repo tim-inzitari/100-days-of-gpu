@@ -15,6 +15,8 @@
 
 // Include custom GPU utilities for timing and validation
 #include "gpu_utils.cuh"
+// Include OpenMP for parallel CPU implementation and timing
+#include <omp.h>
 
 //------------------------------------------------------------------------------
 // Basic GPU Convolution Kernel
@@ -181,11 +183,20 @@ int main(int argc, char** argv) {
         h_kernel[i] = (float)(rand()) / RAND_MAX;
     }
 
-    // Generate reference result using CPU implementation
+    // Run GPU implementation and measure performance
+    PerfMetrics pm = runConvolutionTest(h_input, h_kernel, h_output,
+                                      width, height, kernel_radius);
+
+    // Variable to store CPU time if needed
+    double cpu_time = 0.0;
+
 #if !SKIP_CPU_TEST
     printf("Running CPU reference implementation...\n");
+    double t_cpu_start = omp_get_wtime();
     conv2d_cpu_reference(h_input, h_kernel, h_output_cpu, 
                         width, height, kernel_radius);
+    cpu_time = (omp_get_wtime() - t_cpu_start) * 1000.0;  // Convert to milliseconds
+    printf("CPU Time: %.3f ms\n", cpu_time);
 
     // Validate GPU results against CPU reference
     const float tolerance = 1e-5f;
@@ -196,10 +207,6 @@ int main(int argc, char** argv) {
                 "2D Convolution"    // Implementation name
     );
 #endif
-
-    // Run GPU implementation and measure performance
-    PerfMetrics pm = runConvolutionTest(h_input, h_kernel, h_output,
-                                      width, height, kernel_radius);
 
     // Store results
     TestResult baseline = {"Naive GPU", pm, true};

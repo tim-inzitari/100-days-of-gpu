@@ -7,7 +7,7 @@
 // Global Configuration Flags
 //------------------------------------------------------------------------------
 #ifndef SKIP_CPU_TEST
-#define SKIP_CPU_TEST 1  // Set to 1 to skip CPU reference implementations
+#define SKIP_CPU_TEST 0  // Set to 1 to skip CPU reference implementations
 #endif
 
 //------------------------------------------------------------------------------
