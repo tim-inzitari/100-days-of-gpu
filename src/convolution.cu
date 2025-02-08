@@ -201,12 +201,41 @@ int main(int argc, char** argv) {
     PerfMetrics pm = runConvolutionTest(h_input, h_kernel, h_output,
                                       width, height, kernel_radius);
 
-    // Report performance metrics
-    printf("\nPerformance Summary:\n");
-    printf("Input size: %d x %d, Kernel radius: %d\n", width, height, kernel_radius);
-    printf("Kernel size: %d x %d\n", 2*kernel_radius+1, 2*kernel_radius+1);
-    printf("Total GFLOPS: %.2f\n", pm.gflops);
-    printf("Total time: %.3f ms\n", pm.totalTime);
+    // Store results
+    TestResult baseline = {"Naive GPU", pm, true};
+    
+    // Create dimensions string
+    char dimensions[256];
+    snprintf(dimensions, sizeof(dimensions), 
+             "Input size: %d x %d, Kernel: %d x %d",
+             width, height, 2*kernel_radius+1, 2*kernel_radius+1);
+
+#if !SKIP_CPU_TEST
+    // Create CPU result
+    TestResult cpu_result = {"CPU Reference", 
+        {
+            static_cast<float>(cpu_time),                // transferTime
+            0.0f,                                       // kernelTime
+            0.0f,                                       // d2hTime
+            static_cast<float>(cpu_time),                // totalTime
+            static_cast<float>((2.0 * width * height * (2*kernel_radius+1) * (2*kernel_radius+1)) / 
+                             (cpu_time * 1e6))          // gflops
+        }, 
+        true
+    };
+    
+    // Print summary with CPU comparison
+    printPerformanceSummary<CompareMode::VS_CPU>(
+        "2D Convolution", dimensions,
+        nullptr, 0,  // No additional implementations yet
+        baseline, &cpu_result);
+#else
+    // Print summary without CPU comparison
+    printPerformanceSummary<CompareMode::BASE_ONLY>(
+        "2D Convolution", dimensions,
+        nullptr, 0,  // No additional implementations yet
+        baseline);
+#endif
 
     // Free allocated memory
     free(h_input);

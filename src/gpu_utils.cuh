@@ -335,3 +335,138 @@ float checkResults(const T* baseline,      // Reference implementation results
     // Return maximum difference for caller to use if needed
     return max_diff;
 }
+
+//------------------------------------------------------------------------------
+// Performance Result Structures and Summary Functions
+//------------------------------------------------------------------------------
+// These utilities provide a standardized way to store and report performance
+// results across different GPU implementations.
+//
+// Usage Example 1 - Basic Performance Summary:
+//   TestResult baseline = {"Naive GPU", naive_metrics, true};
+//   TestResult results[] = {
+//       {"Shared Memory", shared_metrics, true},
+//       {"Optimized", opt_metrics, true}
+//   };
+//   char dimensions[256];
+//   snprintf(dimensions, sizeof(dimensions), "Matrix: %d x %d", M, N);
+//   printPerformanceSummary<CompareMode::BASE_ONLY>(
+//       "Matrix Multiplication", dimensions,
+//       results, 2, baseline);
+//
+// Usage Example 2 - With CPU Comparisons:
+//   TestResult cpu_result = {"CPU (OpenMP)", cpu_metrics, true};
+//   printPerformanceSummary<CompareMode::VS_CPU>(
+//       "Tensor Multiplication", dimensions,
+//       results, num_results, baseline, &cpu_result);
+//------------------------------------------------------------------------------
+
+// Structure to store implementation results and metadata
+struct TestResult {
+    const char* name;      // Implementation name for reporting
+    PerfMetrics metrics;   // Performance measurements
+    bool valid;            // Whether this result should be included in summary
+};
+
+//------------------------------------------------------------------------------
+// Performance Summary Printer (Templated Version)
+//------------------------------------------------------------------------------
+// This templated function allows flexible performance reporting with optional
+// CPU comparison modes and customizable baseline selection.
+//
+// Template Parameters:
+//   CompareMode: Enum to specify comparison mode
+//      BASE_ONLY - Compare all against baseline
+//      VS_CPU    - Show both baseline and CPU comparisons
+//
+// Usage Example 1 - GPU Only Comparisons:
+//   printPerformanceSummary<CompareMode::BASE_ONLY>(
+//       "Matrix Multiplication", dimensions,
+//       results, num_results, baseline);
+//
+// Usage Example 2 - With CPU Comparisons:
+//   printPerformanceSummary<CompareMode::VS_CPU>(
+//       "Tensor Multiplication", dimensions,
+//       results, num_results, baseline, cpu_result);
+//------------------------------------------------------------------------------
+
+// Comparison modes for performance summary
+enum class CompareMode {
+    BASE_ONLY,  // Compare implementations against baseline only
+    VS_CPU      // Show comparisons against both baseline and CPU
+};
+
+template<CompareMode Mode>
+inline void printPerformanceSummary(
+    const char* title,              // Title for the summary
+    const char* dimensions,         // Problem dimensions as string
+    const TestResult* results,      // Array of test results
+    int num_results,               // Number of results
+    const TestResult& baseline,    // Baseline result for comparisons
+    const TestResult* cpu_result = nullptr)  // Optional CPU result
+{
+    printf("\n=== %s Performance Summary ===\n", title);
+    printf("%s\n", dimensions);
+    printf("--------------------------------------------------------------------------------\n");
+    
+    if constexpr (Mode == CompareMode::BASE_ONLY) {
+        printf("Implementation      Time (ms)        GFLOPS       vs Baseline\n");
+        printf("--------------------------------------------------------------------------------\n");
+        
+        // Print baseline
+        printf("%-16s  %12.3f    %10.2f    %8.2fx\n",
+               baseline.name,
+               baseline.metrics.totalTime,
+               baseline.metrics.gflops,
+               1.0f);
+        
+        // Print other results
+        for (int i = 0; i < num_results; i++) {
+            if (results[i].valid) {
+                printf("%-16s  %12.3f    %10.2f    %8.2fx\n",
+                       results[i].name,
+                       results[i].metrics.totalTime,
+                       results[i].metrics.gflops,
+                       baseline.metrics.totalTime / results[i].metrics.totalTime);
+            }
+        }
+    }
+    else if constexpr (Mode == CompareMode::VS_CPU) {
+        if (!cpu_result) {
+            printf("Error: CPU result required for VS_CPU mode\n");
+            return;
+        }
+        
+        printf("Implementation      Time (ms)        GFLOPS     vs Base    vs CPU\n");
+        printf("--------------------------------------------------------------------------------\n");
+        
+        // Print CPU result first
+        printf("%-16s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
+               cpu_result->name,
+               cpu_result->metrics.totalTime,
+               cpu_result->metrics.gflops,
+               baseline.metrics.totalTime / cpu_result->metrics.totalTime,
+               1.0f);
+               
+        // Print baseline
+        printf("%-16s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
+               baseline.name,
+               baseline.metrics.totalTime,
+               baseline.metrics.gflops,
+               1.0f,
+               cpu_result->metrics.totalTime / baseline.metrics.totalTime);
+        
+        // Print other results
+        for (int i = 0; i < num_results; i++) {
+            if (results[i].valid) {
+                printf("%-16s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
+                       results[i].name,
+                       results[i].metrics.totalTime,
+                       results[i].metrics.gflops,
+                       baseline.metrics.totalTime / results[i].metrics.totalTime,
+                       cpu_result->metrics.totalTime / results[i].metrics.totalTime);
+            }
+        }
+    }
+    printf("\n");
+}

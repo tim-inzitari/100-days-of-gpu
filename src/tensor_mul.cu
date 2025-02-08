@@ -962,11 +962,14 @@ int main(int argc, char** argv) {
     PerfMetrics pm0 = runTestNaive(h_A, h_B, h_C_baseline, batch_size, m, n, k, l);
     printf("\n");
     
+    // Variable to store CPU time if needed
+    double cpu_time = 0.0;
+    
 #if !SKIP_CPU_TEST
     // Run CPU implementation
-    double t_cpu_start = clock();
+    double t_cpu_start = omp_get_wtime();  // Use OpenMP wall time instead of clock()
     cpu_matrix_multiply(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    double cpu_time = (clock() - t_cpu_start) / (double)CLOCKS_PER_SEC * 1000.0;
+    cpu_time = (omp_get_wtime() - t_cpu_start) * 1000.0;  // Convert to milliseconds
     printf("Test 1: CPU Implementation (OpenMP):\n   Computation: %.3f ms\n", cpu_time);
     checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 1: CPU Implementation");
     printf("\n");
@@ -999,39 +1002,49 @@ int main(int argc, char** argv) {
     }
     printf("\n");
     
-    // Print performance summary
-    printf("\n=== Performance Summary ===\n");
-    printf("Tensor Dimensions: [%d × %d × %d] × [%d × %d × %d]\n", 
-           batch_size, m, n, batch_size, k, l);
-    printf("--------------------------------------------------------------------------------\n");
-    printf("Implementation      Time (ms)        GFLOPS       vs Naive        vs CPU\n");
-    printf("--------------------------------------------------------------------------------\n");
-    printf("0. Naive GPU       %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-           pm0.totalTime, pm0.gflops, 1.0f, cpu_time/pm0.totalTime);
-#if !SKIP_CPU_TEST
-    printf("1. CPU (OpenMP)    %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-           cpu_time, (2.0f * batch_size * m * n * l) / (cpu_time * 1e6f), 
-           pm0.totalTime/cpu_time, 1.0f);
-#endif
-    printf("2. Shared Memory   %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-           pm2.totalTime, pm2.gflops, pm0.totalTime/pm2.totalTime, 
-           cpu_time/pm2.totalTime);
-    printf("3. cuBLAS          %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-           pm3.totalTime, pm3.gflops, pm0.totalTime/pm3.totalTime, 
-           cpu_time/pm3.totalTime);
-    printf("4. Vectorized      %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-           pm4.totalTime, pm4.gflops, pm0.totalTime/pm4.totalTime, 
-           cpu_time/pm4.totalTime);
-    printf("5. Warp-Optimized  %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-           pm5.totalTime, pm5.gflops, pm0.totalTime/pm5.totalTime, 
-           cpu_time/pm5.totalTime);
-    printf("6. Double-Buffered %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-           pm6.totalTime, pm6.gflops, pm0.totalTime/pm6.totalTime, 
-           cpu_time/pm6.totalTime);
-    if (pm7.kernelTime > 0) {
-        printf("7. Tensor Core     %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
-               pm7.totalTime, pm7.gflops, pm0.totalTime/pm7.totalTime, 
-               cpu_time/pm7.totalTime);
+    // Store results
+    TestResult baseline = {"Naive GPU", pm0, true};
+    
+    TestResult results[] = {
+        {"Shared Memory", pm2, true},
+        {"cuBLAS", pm3, true},
+        {"Vectorized", pm4, true},
+        {"Warp-Optimized", pm5, true},
+        {"Double-Buffered", pm6, true},
+        {"Tensor Core", pm7, pm7.kernelTime > 0}
+    };
+
+    // Create dimensions string
+    char dimensions[256];
+    snprintf(dimensions, sizeof(dimensions), 
+             "Tensor Dimensions: [%d × %d × %d] × [%d × %d × %d]",
+             batch_size, m, n, batch_size, k, l);
+
+    // Print summary
+    if (!SKIP_CPU_TEST) {
+        // Create CPU result with explicit float casts
+        TestResult cpu_result = {"CPU (OpenMP)", 
+            {
+                static_cast<float>(cpu_time),                    // transferTime
+                0.0f,                                           // kernelTime
+                0.0f,                                           // d2hTime
+                static_cast<float>(cpu_time),                    // totalTime
+                static_cast<float>((2.0 * batch_size * m * n * l) / (cpu_time * 1e6)) // gflops
+            }, 
+            true
+        };
+        
+        // Print summary with CPU comparisons
+        printPerformanceSummary<CompareMode::VS_CPU>(
+            "Tensor Multiplication", dimensions,
+            results, sizeof(results)/sizeof(results[0]),
+            baseline, &cpu_result);
+    } else {
+        // Print summary without CPU comparisons
+        printPerformanceSummary<CompareMode::BASE_ONLY>(
+            "Tensor Multiplication", dimensions,
+            results, sizeof(results)/sizeof(results[0]),
+            baseline);
     }
     
     // Cleanup
