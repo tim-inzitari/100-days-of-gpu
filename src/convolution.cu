@@ -182,12 +182,10 @@ int main(int argc, char** argv) {
     }
 
     // Generate reference result using CPU implementation
+#if !SKIP_CPU_TEST
+    printf("Running CPU reference implementation...\n");
     conv2d_cpu_reference(h_input, h_kernel, h_output_cpu, 
                         width, height, kernel_radius);
-
-    // Run GPU implementation and measure performance
-    PerfMetrics pm = runConvolutionTest(h_input, h_kernel, h_output,
-                                      width, height, kernel_radius);
 
     // Validate GPU results against CPU reference
     const float tolerance = 1e-5f;
@@ -197,6 +195,11 @@ int main(int argc, char** argv) {
                 tolerance,          // Maximum allowed difference
                 "2D Convolution"    // Implementation name
     );
+#endif
+
+    // Run GPU implementation and measure performance
+    PerfMetrics pm = runConvolutionTest(h_input, h_kernel, h_output,
+                                      width, height, kernel_radius);
 
     // Report performance metrics
     printf("\nPerformance Summary:\n");

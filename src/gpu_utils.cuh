@@ -4,6 +4,13 @@
 #include <stdio.h>
 
 //------------------------------------------------------------------------------
+// Global Configuration Flags
+//------------------------------------------------------------------------------
+#ifndef SKIP_CPU_TEST
+#define SKIP_CPU_TEST 1  // Set to 1 to skip CPU reference implementations
+#endif
+
+//------------------------------------------------------------------------------
 // GPU Performance Metrics Structure Documentation Block
 //------------------------------------------------------------------------------
 // This structure stores timing and performance data for GPU operations.

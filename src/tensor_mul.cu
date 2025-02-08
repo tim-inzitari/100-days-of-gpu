@@ -962,6 +962,7 @@ int main(int argc, char** argv) {
     PerfMetrics pm0 = runTestNaive(h_A, h_B, h_C_baseline, batch_size, m, n, k, l);
     printf("\n");
     
+#if !SKIP_CPU_TEST
     // Run CPU implementation
     double t_cpu_start = clock();
     cpu_matrix_multiply(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
@@ -969,6 +970,7 @@ int main(int argc, char** argv) {
     printf("Test 1: CPU Implementation (OpenMP):\n   Computation: %.3f ms\n", cpu_time);
     checkResults(h_C_baseline, h_C_temp, total_elements_C, tolerance, "Test 1: CPU Implementation");
     printf("\n");
+#endif
     
     // Run and validate remaining implementations
     PerfMetrics pm2 = runTestSharedMemory(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
@@ -1006,9 +1008,11 @@ int main(int argc, char** argv) {
     printf("--------------------------------------------------------------------------------\n");
     printf("0. Naive GPU       %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
            pm0.totalTime, pm0.gflops, 1.0f, cpu_time/pm0.totalTime);
+#if !SKIP_CPU_TEST
     printf("1. CPU (OpenMP)    %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
            cpu_time, (2.0f * batch_size * m * n * l) / (cpu_time * 1e6f), 
            pm0.totalTime/cpu_time, 1.0f);
+#endif
     printf("2. Shared Memory   %12.3f    %10.2f    %8.2fx    %10.2fx\n", 
            pm2.totalTime, pm2.gflops, pm0.totalTime/pm2.totalTime, 
            cpu_time/pm2.totalTime);
