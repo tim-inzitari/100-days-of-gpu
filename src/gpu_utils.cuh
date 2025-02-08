@@ -25,9 +25,6 @@
 //------------------------------------------------------------------------------
 // Global Configuration Flags
 //------------------------------------------------------------------------------
-#ifndef SKIP_CPU_TEST
-#define SKIP_CPU_TEST 0  // Set to 1 to skip CPU reference implementations
-#endif
 
 //------------------------------------------------------------------------------
 // GPU Performance Metrics Structure Documentation Block
@@ -528,6 +525,7 @@ struct KernelTest {
     const char* name;                  // Display name of the test
     PerfMetrics (*run)(Args...);       // Function pointer to test implementation
     bool enabled;                      // Whether test should be run
+    bool isCPU;                        // Whether this is a CPU test
 };
 
 // Main test registry class that manages and runs tests
@@ -537,18 +535,27 @@ private:
     std::vector<KernelTest<Args...>> tests;  // Collection of registered tests
     const char* test_name;                    // Name of the test suite
     float tolerance;                          // Accuracy tolerance for comparisons
+    bool skip_cpu;  // New flag to control CPU testing
     TestResult cpu_result = {"", {0}, false}; // Optional CPU reference result
 
 public:
-    // Constructor initializes registry with name and accuracy tolerance
-    TestRegistry(const char* name, float tol = 1e-5f) 
-        : test_name(name), tolerance(tol) {}
+    // Updated constructor with CPU test control
+    TestRegistry(const char* name, float tol = 1e-5f, bool skip_cpu = false) 
+        : test_name(name), tolerance(tol), skip_cpu(skip_cpu) {}
 
-    // Register a new test implementation
-    void addTest(const char* name,              // Display name for the test
-                PerfMetrics (*run)(Args...),    // Test implementation function
-                bool enabled = true) {          // Whether test is enabled
-        tests.push_back({name, run, enabled});  // Add test to registry
+    // Add a CPU test directly to the registry
+    void addCPUTest(const char* name, PerfMetrics (*run)(Args...)) {
+        if (!skip_cpu) {
+            tests.push_back({name, run, true, true});  // true for isCPU
+        }
+    }
+
+    // Modified addTest to specify CPU/GPU
+    void addTest(const char* name, PerfMetrics (*run)(Args...), 
+                bool enabled = true, bool isCPU = false) {
+        if (!isCPU || !skip_cpu) {
+            tests.push_back({name, run, enabled, isCPU});
+        }
     }
 
     // Run all registered and enabled tests
@@ -578,16 +585,13 @@ public:
         }
 
         // Print performance summary with appropriate comparison mode
-#if !SKIP_CPU_TEST
         if (cpu_result.valid) {
             // Include CPU comparison if CPU result is available
             printPerformanceSummary<CompareMode::VS_CPU>(
                 test_name, dimensions,
                 results.data(), results.size(),
                 baseline, &cpu_result);
-        } else
-#endif
-        {
+        } else {
             // Compare against baseline only
             printPerformanceSummary<CompareMode::BASE_ONLY>(
                 test_name, dimensions,

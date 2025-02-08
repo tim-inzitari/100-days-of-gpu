@@ -49,6 +49,38 @@ using namespace nvcuda::wmma::experimental;
 #include "gpu_utils.cuh"
 
 //------------------------------------------------------------------------------
+// Test Configuration
+//------------------------------------------------------------------------------
+// Type alias for test registry with tensor multiplication parameter types
+using TensorTestRegistry = TestRegistry<const float*, const float*, float*, 
+                                      int, int, int, int, int>;
+
+// Create test registry with CPU testing enabled
+static TensorTestRegistry tensor_tests("Tensor Multiplication", 1e-5f, false);
+
+// Forward declare all test implementations
+PerfMetrics runCPUTest(const float*, const float*, float*, int, int, int, int, int);
+PerfMetrics runTestNaive(const float*, const float*, float*, int, int, int, int, int);
+PerfMetrics runTestSharedMemory(const float*, const float*, float*, int, int, int, int, int);
+PerfMetrics runTestCublas(const float*, const float*, float*, int, int, int, int, int);
+PerfMetrics runTestVectorized(const float*, const float*, float*, int, int, int, int, int);
+PerfMetrics runTestWarpOptimized(const float*, const float*, float*, int, int, int, int, int);
+PerfMetrics runTestDoubleBuffered(const float*, const float*, float*, int, int, int, int, int);
+PerfMetrics runTestTensorCore(const float*, const float*, float*, int, int, int, int, int);
+
+// Initialize all tests
+void initializeTests() {
+    tensor_tests.addTest("CPU (OpenMP)", runCPUTest, true, true);
+    tensor_tests.addTest("Naive GPU", runTestNaive, true);
+    tensor_tests.addTest("Shared Memory", runTestSharedMemory, true);
+    tensor_tests.addTest("cuBLAS", runTestCublas, true);
+    tensor_tests.addTest("Vectorized", runTestVectorized, true);
+    tensor_tests.addTest("Warp-Optimized", runTestWarpOptimized, true);
+    tensor_tests.addTest("Double-Buffered", runTestDoubleBuffered, true);
+    tensor_tests.addTest("Tensor Core", runTestTensorCore, true);
+}
+
+//------------------------------------------------------------------------------
 // Global constants used throughout the program
 //------------------------------------------------------------------------------
 // Define size of shared memory tiles for matrix multiplication
@@ -189,7 +221,7 @@ float checkResults(const float* baseline, const float* test, int total_elements,
 //   batch_size: Number of matrix multiplications to perform
 //   m, n, k, l: Matrix dimensions
 //------------------------------------------------------------------------------
-void cpu_matrix_multiply(float* A, float* B, float* C,
+void cpu_matrix_multiply(const float* A, const float* B, float* C,
                          int batch_size, int m, int n, int k, int l) {
     // Initialize output matrix C to zero
     memset(C, 0, batch_size * m * l * sizeof(float));
@@ -915,20 +947,19 @@ __global__ void tensor_mul_tensorcore(const float* A, const float* B, float* C,
 #endif
 }
 
-// Create test registry
-using TensorTestRegistry = TestRegistry<const float*, const float*, float*, 
-                                      int, int, int, int, int>;
-static TensorTestRegistry tensor_tests("Tensor Multiplication");
-
-// In main or initialization:
-void initializeTests() {
-    tensor_tests.addTest("Naive GPU", runTestNaive);
-    tensor_tests.addTest("Shared Memory", runTestSharedMemory);
-    tensor_tests.addTest("cuBLAS", runTestCublas);
-    tensor_tests.addTest("Vectorized", runTestVectorized);
-    tensor_tests.addTest("Warp-Optimized", runTestWarpOptimized);
-    tensor_tests.addTest("Double-Buffered", runTestDoubleBuffered);
-    tensor_tests.addTest("Tensor Core", runTestTensorCore, true);
+// Wrap CPU implementation in same interface as GPU tests
+PerfMetrics runCPUTest(const float* h_A, const float* h_B, float* h_C,
+                       int batch_size, int m, int n, int k, int l) {
+    PerfMetrics pm = {0};
+    
+    double start = omp_get_wtime();
+    cpu_matrix_multiply(h_A, h_B, h_C, batch_size, m, n, k, l);
+    double end = omp_get_wtime();
+    
+    pm.totalTime = (end - start) * 1000.0;  // Convert to ms
+    pm.gflops = (2.0 * batch_size * m * n * l) / (pm.totalTime * 1e6);
+    
+    return pm;
 }
 
 //------------------------------------------------------------------------------
@@ -978,18 +1009,7 @@ int main(int argc, char** argv) {
              "Tensor Dimensions: [%d × %d × %d] × [%d × %d × %d]",
              batch_size, m, n, batch_size, k, l);
 
-#if !SKIP_CPU_TEST
-    // Run CPU test
-    double cpu_time = 0.0;
-    double t_cpu_start = omp_get_wtime();
-    cpu_matrix_multiply(h_A, h_B, h_C_temp, batch_size, m, n, k, l);
-    cpu_time = (omp_get_wtime() - t_cpu_start) * 1000.0;
-    
-    double gflops = (2.0 * batch_size * m * n * l) / (cpu_time * 1e6);
-    tensor_tests.setCPUResult("CPU (OpenMP)", cpu_time, gflops);
-#endif
-
-    // Run all GPU tests
+    // Run all tests
     tensor_tests.runAll(dimensions, h_A, h_B, h_C_temp, batch_size, m, n, k, l);
     
     // Cleanup
