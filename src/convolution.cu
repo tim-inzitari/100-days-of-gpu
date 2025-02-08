@@ -35,12 +35,14 @@ static ConvTestRegistry conv_tests("2D Convolution", 1e-5f, false);
 PerfMetrics runCPUTest(const float*, const float*, float*, int, int, int);
 PerfMetrics runConvolutionTest(const float*, const float*, float*, int, int, int);
 PerfMetrics runSharedMemoryTest(const float*, const float*, float*, int, int, int);
+PerfMetrics runRegisterTiledTest(const float*, const float*, float*, int, int, int);
 
 // Initialize all tests
 void initializeTests() {
     conv_tests.addTest("CPU Reference", runCPUTest, false, true);  // CPU test, disabled
     conv_tests.addTest("Naive GPU", runConvolutionTest, true);     // Test 0
     conv_tests.addTest("Shared Memory", runSharedMemoryTest, true); // Test 1
+    conv_tests.addTest("Register Tiled", runRegisterTiledTest, true); // Test 2
 }
 
 //------------------------------------------------------------------------------
@@ -265,6 +267,79 @@ PerfMetrics runCPUTest(const float* h_input, const float* h_kernel, float* h_out
                 (pm.totalTime * 1e6);
     
     return pm;
+}
+
+// Fix the register tiling kernel implementation
+__global__ void conv2d_register_tiled_kernel(const float *input, const float *kernel, 
+                                           float *output, int r, int width, int height) {
+    // Calculate base coordinates (each thread handles 2x2 pixels)
+    const int tx = threadIdx.x;
+    const int ty = threadIdx.y;
+    const int bx = blockIdx.x * (blockDim.x * 2); // Multiply by 2 for tile width
+    const int by = blockIdx.y * (blockDim.y * 2); // Multiply by 2 for tile height
+    const int x = bx + tx * 2; // Multiply by 2 to space out threads
+    const int y = by + ty * 2;
+
+    // Constants for register tiling
+    constexpr int TILE_X = 2;
+    constexpr int TILE_Y = 2;
+    
+    // Compute convolution for each pixel in the tile
+    #pragma unroll
+    for (int ty = 0; ty < TILE_Y; ty++) {
+        #pragma unroll
+        for (int tx = 0; tx < TILE_X; tx++) {
+            const int out_y = y + ty;
+            const int out_x = x + tx;
+            
+            // Only compute if within bounds
+            if (out_y < height && out_x < width) {
+                float sum = 0.0f;
+                
+                // Apply convolution kernel
+                for (int ky = -r; ky <= r; ky++) {
+                    for (int kx = -r; kx <= r; kx++) {
+                        const int in_y = out_y + ky;
+                        const int in_x = out_x + kx;
+                        
+                        if (in_y >= 0 && in_y < height && in_x >= 0 && in_x < width) {
+                            sum += input[in_y * width + in_x] * 
+                                  kernel[(ky + r) * (2*r + 1) + (kx + r)];
+                        }
+                    }
+                }
+                
+                output[out_y * width + out_x] = sum;
+            }
+        }
+    }
+}
+
+// Fix the test runner for register tiling implementation
+PerfMetrics runRegisterTiledTest(const float* h_input, const float* h_kernel, 
+                                float* h_output, int width, int height, 
+                                int kernel_radius) {
+    // Configure grid and block sizes
+    dim3 block(16, 16);  // Each thread handles 2x2 pixels
+    // Divide dimensions by 2 since each thread handles 2x2 pixels
+    dim3 grid((width + (block.x * 2) - 1)/(block.x * 2), 
+              (height + (block.y * 2) - 1)/(block.y * 2));
+    LaunchConfig config(grid, block);
+    
+    size_t input_size = width * height;
+    size_t kernel_size = (2*kernel_radius + 1) * (2*kernel_radius + 1);
+    size_t output_size = width * height;
+    size_t flops_per_thread = 2 * kernel_size * 4; // 4 pixels per thread
+    
+    return runGpuTest<float>(
+        conv_tests.getCurrentTestName(),
+        conv2d_register_tiled_kernel,
+        h_input, h_kernel, h_output,
+        input_size, kernel_size, output_size,
+        config,
+        flops_per_thread,
+        kernel_radius, width, height
+    );
 }
 
 //------------------------------------------------------------------------------
