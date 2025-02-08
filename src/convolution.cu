@@ -38,9 +38,9 @@ PerfMetrics runSharedMemoryTest(const float*, const float*, float*, int, int, in
 
 // Initialize all tests
 void initializeTests() {
-    conv_tests.addTest("CPU Reference", runCPUTest, false, true);
-    conv_tests.addTest("Naive GPU", runConvolutionTest, true);
-    conv_tests.addTest("Shared Memory", runSharedMemoryTest, true);
+    conv_tests.addTest("CPU Reference", runCPUTest, false, true);  // CPU test, disabled
+    conv_tests.addTest("Naive GPU", runConvolutionTest, true);     // Test 0
+    conv_tests.addTest("Shared Memory", runSharedMemoryTest, true); // Test 1
 }
 
 //------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, floa
     
     // Launch GPU test
     return runGpuTest<float>(
-        "Test 1: Naive GPU",
+        conv_tests.getCurrentTestName(),  // Will now be "Test 0: Naive GPU"
         conv2d_basic_kernel,
         h_input, h_kernel, h_output,
         input_size, kernel_size, output_size,
@@ -241,7 +241,7 @@ PerfMetrics runSharedMemoryTest(const float* h_input, const float* h_kernel, flo
     
     // Launch GPU test
     return runGpuTest<float>(
-        "Test 2: Shared Memory",
+        conv_tests.getCurrentTestName(),  // Will now be "Test 1: Shared Memory"
         conv2d_shared_kernel,
         h_input, h_kernel, h_output,
         input_size, kernel_size, output_size,
@@ -338,6 +338,22 @@ int main(int argc, char** argv) {
     free(h_output_cpu);
 
     return 0;
+}
+
+float checkResults(const float* baseline, const float* test, int total_elements, 
+                  float tol, const char* impl_name = nullptr) {
+    float max_diff = 0.0f;
+    for (int i = 0; i < total_elements; i++) {
+        float diff = fabs(baseline[i] - test[i]);
+        max_diff = max(max_diff, diff);
+    }
+    
+    if (impl_name) {
+        printf("%s: Accuracy (max diff: %e)\n", impl_name, max_diff);
+    }
+    printf("   Accuracy Check: %s (max diff: %e)\n", 
+           max_diff <= tol ? "PASSED" : "FAILED", max_diff);
+    return max_diff;
 }
 
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <tuple>  // Add this for tuple support
 
 //------------------------------------------------------------------------------
 // Contents
@@ -569,6 +570,33 @@ private:
     bool skip_cpu;
     TestResult cpu_result = {"", {0}, false};
     int current_test;  // Track current test being run
+    float* baseline_output = nullptr;  // Store naive implementation results
+    size_t output_size = 0;           // Size of output array
+
+    // Helper to calculate output size for different operations
+    size_t calculateOutputSize(const auto& args_tuple) {
+        constexpr size_t tuple_size = std::tuple_size_v<std::remove_reference_t<decltype(args_tuple)>>;
+        
+        if (test_name == "2D Convolution") {
+            // For convolution: width * height
+            // Args are: const float*, const float*, float*, int width, int height, int kernel_radius
+            return std::get<3>(args_tuple) * std::get<4>(args_tuple);  // width * height
+        } else if (test_name == "Tensor Multiplication") {
+            if constexpr (tuple_size >= 8) {
+                // For tensor multiplication: batch_size * m * l
+                // Args are: const float*, const float*, float*, int batch_size, int m, int n, int k, int l
+                return std::get<3>(args_tuple) *  // batch_size
+                       std::get<4>(args_tuple) *  // m
+                       std::get<7>(args_tuple);   // l
+            } else {
+                // Handle case where tuple is too small
+                return std::get<3>(args_tuple) * std::get<4>(args_tuple);
+            }
+        } else {
+            // Default case (could be matrix multiplication or other)
+            return std::get<3>(args_tuple) * std::get<4>(args_tuple);  // Default to M * N
+        }
+    }
 
 public:
     TestRegistry(const char* name, float tol = 1e-5f, bool skip_cpu = false) 
@@ -576,65 +604,60 @@ public:
 
     void addTest(const char* name, PerfMetrics (*run)(Args...), 
                 bool enabled = true, bool isCPU = false) {
-        // Only add test if it's enabled and (not a CPU test or CPU tests aren't skipped)
         if (enabled && (!isCPU || !skip_cpu)) {
             char numbered_name[64];
             snprintf(numbered_name, sizeof(numbered_name), 
                     "Test %d: %s", (int)tests.size(), name);
-            tests.push_back({numbered_name, run, true, isCPU});  // Always true since we only add enabled tests
+            tests.push_back({numbered_name, run, true, isCPU});
         }
     }
 
     void runAll(const char* dimensions, Args... args) {
-        current_test = 0;  // Reset counter before running tests
+        current_test = 0;
         std::vector<TestResult> results;
         TestResult baseline;
         bool first = true;
 
+        // Create tuple once at the beginning
+        auto args_tuple = std::make_tuple(args...);
+
         for (const auto& test : tests) {
             PerfMetrics pm = test.run(args...);
             TestResult result = {test.name.c_str(), pm, true};
-            current_test++;  // Increment after each test
+            current_test++;
 
-            if (first) {
+            if (first && !test.isCPU) {  // Use first non-CPU test as baseline
                 baseline = result;
+                const float* output = std::get<2>(args_tuple);
+                output_size = calculateOutputSize(args_tuple);
+                
+                if (baseline_output == nullptr) {
+                    baseline_output = new float[output_size];
+                }
+                memcpy(baseline_output, output, output_size * sizeof(float));
                 first = false;
-            } else {
+                printf("\n");  // Add newline after first test
+            } else if (!test.isCPU) {  // Skip CPU tests for validation
+                if (baseline_output != nullptr) {
+                    const float* output = std::get<2>(args_tuple);
+                    // Use the actual test name for validation
+                    printf("Validating %s against naive GPU baseline:\n", test.name.c_str());
+                    checkResults(baseline_output, output, output_size, tolerance, test.name.c_str());
+                    printf("\n");  // Add newline after validation, before next test
+                }
                 results.push_back(result);
             }
         }
 
-        // Print performance summary with appropriate comparison mode
-        if (cpu_result.valid) {
-            // Include CPU comparison if CPU result is available
-            printPerformanceSummary<CompareMode::VS_CPU>(
-                test_name.c_str(), dimensions,
-                results.data(), results.size(),
-                baseline, &cpu_result);
-        } else {
-            // Compare against baseline only
-            printPerformanceSummary<CompareMode::BASE_ONLY>(
-                test_name.c_str(), dimensions,
-                results.data(), results.size(),
-                baseline);
-        }
-    }
+        // Print performance summary
+        printPerformanceSummary<CompareMode::BASE_ONLY>(
+            test_name.c_str(), dimensions,
+            results.data(), results.size(),
+            baseline);
 
-    // Add CPU reference implementation results
-    void setCPUResult(const char* name,    // Name for CPU implementation
-                     double time,          // CPU execution time in ms
-                     double gflops) {      // CPU performance in GFLOPS
-        // Create CPU result with timing and performance data
-        cpu_result = {"CPU Reference", 
-            {
-                static_cast<float>(time),  // Total time is CPU execution time
-                0.0f,                      // No kernel time for CPU
-                0.0f,                      // No D2H time for CPU
-                static_cast<float>(time),  // Total time same as execution time
-                static_cast<float>(gflops) // Convert GFLOPS to float
-            }, 
-            true                          // Mark as valid result
-        };
+        // Cleanup
+        delete[] baseline_output;
+        baseline_output = nullptr;
     }
 
     // Get name of current test
@@ -643,5 +666,9 @@ public:
             return tests[current_test].name.c_str();
         }
         return "Unknown Test";
+    }
+
+    ~TestRegistry() {
+        delete[] baseline_output;
     }
 };

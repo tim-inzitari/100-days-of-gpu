@@ -189,31 +189,6 @@ void initMatrices(float* A, float* B, int batch_size, int m, int n, int k, int l
 }
 
 //------------------------------------------------------------------------------
-// Utility function: Compare results between two implementations
-// Parameters:
-//   baseline: Reference result to compare against
-//   test: Result to validate
-//   total_elements: Number of elements to compare
-//   tol: Maximum allowed difference between elements
-//   impl_name: Name of the implementation being tested
-// Returns: Maximum difference found between any pair of elements
-//------------------------------------------------------------------------------
-float checkResults(const float* baseline, const float* test, int total_elements, float tol, const char* impl_name = nullptr) {
-    float max_diff = 0.0f;
-    for (int i = 0; i < total_elements; i++) {
-        float diff = fabs(float(baseline[i] - test[i]));
-        max_diff = max(max_diff, diff);
-    }
-    
-    if (impl_name) {
-        printf("%s: Accuracy (max diff: %e)\n", impl_name, max_diff);
-    }
-    printf("   Accuracy Check: %s (max diff: %e)\n", 
-           max_diff <= tol ? "PASSED" : "FAILED", max_diff);
-    return max_diff;
-}
-
-//------------------------------------------------------------------------------
 // CPU Implementation using OpenMP and __float128 (quad precision) for improved accuracy
 // Parameters:
 //   A, B: Input matrices
@@ -1024,4 +999,20 @@ int main(int argc, char** argv) {
     cudaFree(0);  // Reset CUDA context
     
     return 0;
+}
+
+float checkResults(const float* baseline, const float* test, int total_elements, 
+                  float tol, const char* impl_name = nullptr) {
+    float max_diff = 0.0f;
+    for (int i = 0; i < total_elements; i++) {
+        float diff = fabs(baseline[i] - test[i]);
+        max_diff = max(max_diff, diff);
+    }
+    
+    if (impl_name) {
+        printf("%s: Accuracy (max diff: %e)\n", impl_name, max_diff);
+    }
+    printf("   Accuracy Check: %s (max diff: %e)\n", 
+           max_diff <= tol ? "PASSED" : "FAILED", max_diff);
+    return max_diff;
 }
