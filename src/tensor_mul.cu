@@ -281,22 +281,19 @@ PerfMetrics runTestNaive(const float* h_A, const float* h_B, float* h_C,
     dim3 block(32, 32);
     dim3 grid((m + 31) / 32, (l + 31) / 32, batch_size);
     
-    // Calculate sizes for memory allocation
     size_t size_A = batch_size * m * n;
     size_t size_B = batch_size * k * l;
     size_t size_C = batch_size * m * l;
-    
-    // Calculate FLOPS per thread (2 operations per multiply-add)
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
-        "Test 0: Naive GPU Implementation",
+        tensor_tests.getCurrentTestName(),
         tensor_mul,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
         grid, block,
         flops_per_thread,
-        batch_size, m, n, k, l  // Additional kernel parameters
+        batch_size, m, n, k, l
     );
 }
 
@@ -320,7 +317,7 @@ PerfMetrics runTestSharedMemory(const float* h_A, const float* h_B, float* h_C,
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
-        "Test 2: Shared Memory Implementation",
+        tensor_tests.getCurrentTestName(),
         tensor_mul_shared,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
@@ -334,7 +331,7 @@ PerfMetrics runTestSharedMemory(const float* h_A, const float* h_B, float* h_C,
 // Test 3: cuBLAS Implementation (Placeholder)
 //------------------------------------------------------------------------------
 PerfMetrics runTestCublas(const float* h_A, const float* h_B, float* h_C,
-                           int batch_size, int m, int n, int k, int l) {
+                         int batch_size, int m, int n, int k, int l) {
     PerfMetrics pm = {0};
     cublasHandle_t handle;
     cublasCreate(&handle);
@@ -391,7 +388,7 @@ PerfMetrics runTestCublas(const float* h_A, const float* h_B, float* h_C,
     pm.totalTime = pm.transferTime + pm.kernelTime + pm.d2hTime;
     pm.gflops = (2.0f * batch_size * m * n * l) / (pm.kernelTime * 1e6f);
 
-    printf("Test 3: cuBLAS Implementation:\n");
+    printf("%s:\n", tensor_tests.getCurrentTestName());
     printf("   H2D: %.3f ms, Kernel: %.3f ms, D2H: %.3f ms, Total: %.3f ms, GFLOPS: %.2f\n",
            pm.transferTime, pm.kernelTime, pm.d2hTime, pm.totalTime, pm.gflops);
 
@@ -417,7 +414,7 @@ PerfMetrics runTestVectorized(const float* h_A, const float* h_B, float* h_C,
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
-        "Test 4: Vectorized Implementation",
+        tensor_tests.getCurrentTestName(),
         tensor_mul_vectorized,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
@@ -442,7 +439,7 @@ PerfMetrics runTestWarpOptimized(const float* h_A, const float* h_B, float* h_C,
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
-        "Test 5: Warp-Optimized Implementation",
+        tensor_tests.getCurrentTestName(),
         tensor_mul_warp_optimized,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
@@ -467,7 +464,7 @@ PerfMetrics runTestDoubleBuffered(const float* h_A, const float* h_B, float* h_C
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
-        "Test 6: Double-Buffered Implementation",
+        tensor_tests.getCurrentTestName(),
         tensor_mul_double_buffered,
         h_A, h_B, h_C,
         size_A, size_B, size_C,
@@ -503,7 +500,7 @@ PerfMetrics runTestTensorCore(const float* h_A, const float* h_B, float* h_C,
     size_t flops_per_thread = 2 * n;
     
     return runGpuTest<float>(
-        "Test 7: Tensor Core Implementation",
+        tensor_tests.getCurrentTestName(),
         tensor_mul_tensorcore,
         h_A, h_B, h_C,
         size_A, size_B, size_C,

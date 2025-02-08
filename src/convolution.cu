@@ -110,7 +110,7 @@ PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, floa
     
     // Launch GPU test
     return runGpuTest<float>(
-        "Convolution Test",
+        "Test 1: Naive GPU",
         conv2d_basic_kernel,
         h_input, h_kernel, h_output,
         input_size, kernel_size, output_size,
@@ -176,7 +176,7 @@ PerfMetrics runSharedMemoryTest(const float* h_input, const float* h_kernel, flo
     
     // Launch GPU test
     return runGpuTest<float>(
-        "Shared Memory Convolution",
+        "Test 2: Shared Memory",
         conv2d_shared_kernel,
         h_input, h_kernel, h_output,
         input_size, kernel_size, output_size,

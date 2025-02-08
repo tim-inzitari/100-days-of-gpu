@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <vector>
+#include <string>
 
 //------------------------------------------------------------------------------
 // Contents
@@ -105,7 +106,7 @@ enum class CompareMode {
 //   Args: Variable argument types for additional kernel parameters
 //
 // Function Parameters:
-//   testName: Descriptive name for the test (used in output)
+//   base_name: Base name without number
 //   kernel: Pointer to the GPU kernel function
 //   h_A: First input array on host
 //   h_B: Second input array on host
@@ -116,6 +117,7 @@ enum class CompareMode {
 //   grid: CUDA grid dimensions
 //   block: CUDA block dimensions for kernel launch
 //   flops_per_thread: Number of floating point operations per thread
+//   test_number: Test number for naming
 //   args: Additional kernel arguments
 //
 // Returns:
@@ -136,6 +138,7 @@ enum class CompareMode {
 //       size_A, size_B, size_C,
 //       grid, block,
 //       flops,
+//       1,  // Test number
 //       M, N, K  // Additional kernel parameters
 //   );
 //
@@ -154,6 +157,7 @@ enum class CompareMode {
 //       size_input, size_kernel, size_output,
 //       grid, block,
 //       flops,
+//       2,  // Test number
 //       width, height, kernel_radius
 //   );
 //
@@ -173,34 +177,21 @@ enum class CompareMode {
 //   - Host memory should be allocated before calling
 //   - All GPU resources are cleaned up before return
 //------------------------------------------------------------------------------
-template <typename T, typename... Args>
+template <typename T, typename... KernelArgs>
 PerfMetrics runGpuTest(
-    // Name of the test for reporting purposes
-    const char *testName,
-    // Function pointer to the GPU kernel
-    void (*kernel)(const T *, const T *, T *, Args...),
-    // Pointer to first input array in host memory
+    const char *base_name,  // Will now be the full numbered name
+    void (*kernel)(const T *, const T *, T *, KernelArgs...),
     const T *h_A,
-    // Pointer to second input array in host memory
     const T *h_B,
-    // Pointer to output array in host memory
     T *h_C,
-    // Number of elements in first input array
     size_t size_A,
-    // Number of elements in second input array
     size_t size_B,
-    // Number of elements in output array
     size_t size_C,
-    // CUDA grid dimensions for kernel launch
     dim3 grid,
-    // CUDA block dimensions for kernel launch
     dim3 block,
-    // Number of floating point operations per thread
     size_t flops_per_thread,
-    // Additional kernel parameters (variadic)
-    Args... args)
+    KernelArgs... args)  // Remove test_number parameter
 {
-
     // Initialize performance metrics structure to zero
     PerfMetrics pm = {0};
     // Variable to store timing results
@@ -268,9 +259,8 @@ PerfMetrics runGpuTest(
     // Calculate GFLOPS (billion floating point operations per second)
     pm.gflops = (flops_per_thread * total_threads) / (pm.kernelTime * 1e6f);
 
-    // Print test name
-    printf("%s:\n", testName);
-    // Print detailed performance metrics
+    // Print test name (already includes number)
+    printf("%s:\n", base_name);
     printf("   H2D: %.3f ms, Kernel: %.3f ms, D2H: %.3f ms, Total: %.3f ms, GFLOPS: %.2f\n",
            pm.transferTime, pm.kernelTime, pm.d2hTime, pm.totalTime, pm.gflops);
 
@@ -395,33 +385,33 @@ float checkResults(const T* baseline,      // Reference implementation results
 //------------------------------------------------------------------------------
 template<CompareMode Mode>
 inline void printPerformanceSummary(
-    const char* title,              // Title for the summary
-    const char* dimensions,         // Problem dimensions as string
-    const TestResult* results,      // Array of test results
-    int num_results,               // Number of results
-    const TestResult& baseline,    // Baseline result for comparisons
-    const TestResult* cpu_result = nullptr)  // Optional CPU result
+    const char* title,
+    const char* dimensions,
+    const TestResult* results,
+    int num_results,
+    const TestResult& baseline,
+    const TestResult* cpu_result = nullptr)
 {
     printf("\n=== %s Performance Summary ===\n", title);
     printf("%s\n", dimensions);
     printf("--------------------------------------------------------------------------------\n");
     
     if constexpr (Mode == CompareMode::BASE_ONLY) {
-        printf("Implementation      Time (ms)        GFLOPS       vs Baseline\n");
+        printf("Implementation                Time (ms)        GFLOPS       vs Baseline\n");
         printf("--------------------------------------------------------------------------------\n");
         
-        // Print baseline
-        printf("%-16s  %12.3f    %10.2f    %8.2fx\n",
-               baseline.name,
+        // Print baseline result
+        printf("%-25s  %12.3f    %10.2f    %8.2fx\n",
+               baseline.name,                    // Use baseline name
                baseline.metrics.totalTime,
                baseline.metrics.gflops,
                1.0f);
         
-        // Print other results
+        // Print each test result with its own name
         for (int i = 0; i < num_results; i++) {
             if (results[i].valid) {
-                printf("%-16s  %12.3f    %10.2f    %8.2fx\n",
-                       results[i].name,
+                printf("%-25s  %12.3f    %10.2f    %8.2fx\n",
+                       results[i].name,          // Use result name from array
                        results[i].metrics.totalTime,
                        results[i].metrics.gflops,
                        baseline.metrics.totalTime / results[i].metrics.totalTime);
@@ -434,11 +424,11 @@ inline void printPerformanceSummary(
             return;
         }
         
-        printf("Implementation      Time (ms)        GFLOPS     vs Base    vs CPU\n");
+        printf("Implementation           Time (ms)        GFLOPS     vs Base    vs CPU\n");
         printf("--------------------------------------------------------------------------------\n");
         
         // Print CPU result first
-        printf("%-16s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
+        printf("%-20s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
                cpu_result->name,
                cpu_result->metrics.totalTime,
                cpu_result->metrics.gflops,
@@ -446,7 +436,7 @@ inline void printPerformanceSummary(
                1.0f);
                
         // Print baseline
-        printf("%-16s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
+        printf("%-20s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
                baseline.name,
                baseline.metrics.totalTime,
                baseline.metrics.gflops,
@@ -456,7 +446,7 @@ inline void printPerformanceSummary(
         // Print other results
         for (int i = 0; i < num_results; i++) {
             if (results[i].valid) {
-                printf("%-16s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
+                printf("%-20s  %12.3f    %10.2f    %8.2fx   %7.2fx\n",
                        results[i].name,
                        results[i].metrics.totalTime,
                        results[i].metrics.gflops,
@@ -519,67 +509,54 @@ inline void printPerformanceSummary(
 // - Results include timing, GFLOPS, and relative performance metrics
 //------------------------------------------------------------------------------
 
-// Structure to hold information about a single test implementation
-template<typename... Args>
-struct KernelTest {
-    const char* name;                  // Display name of the test
-    PerfMetrics (*run)(Args...);       // Function pointer to test implementation
-    bool enabled;                      // Whether test should be run
-    bool isCPU;                        // Whether this is a CPU test
-};
-
-// Main test registry class that manages and runs tests
 template<typename... Args>
 class TestRegistry {
 private:
-    std::vector<KernelTest<Args...>> tests;  // Collection of registered tests
-    const char* test_name;                    // Name of the test suite
-    float tolerance;                          // Accuracy tolerance for comparisons
-    bool skip_cpu;  // New flag to control CPU testing
-    TestResult cpu_result = {"", {0}, false}; // Optional CPU reference result
+    struct KernelTest {
+        std::string name;              // Store full name with number
+        PerfMetrics (*run)(Args...);
+        bool enabled;
+        bool isCPU;
+    };
+
+    std::vector<KernelTest> tests;
+    std::string test_name;
+    float tolerance;
+    bool skip_cpu;
+    TestResult cpu_result = {"", {0}, false};
+    int current_test;  // Track current test being run
 
 public:
-    // Updated constructor with CPU test control
     TestRegistry(const char* name, float tol = 1e-5f, bool skip_cpu = false) 
-        : test_name(name), tolerance(tol), skip_cpu(skip_cpu) {}
+        : test_name(name), tolerance(tol), skip_cpu(skip_cpu), current_test(0) {}
 
-    // Add a CPU test directly to the registry
-    void addCPUTest(const char* name, PerfMetrics (*run)(Args...)) {
-        if (!skip_cpu) {
-            tests.push_back({name, run, true, true});  // true for isCPU
-        }
-    }
-
-    // Modified addTest to specify CPU/GPU
     void addTest(const char* name, PerfMetrics (*run)(Args...), 
                 bool enabled = true, bool isCPU = false) {
         if (!isCPU || !skip_cpu) {
-            tests.push_back({name, run, enabled, isCPU});
+            char numbered_name[64];
+            snprintf(numbered_name, sizeof(numbered_name), 
+                    "Test %d: %s", (int)tests.size(), name);
+            tests.push_back({numbered_name, run, enabled, isCPU});
         }
     }
 
-    // Run all registered and enabled tests
-    void runAll(const char* dimensions,    // Problem size description
-                Args... args) {            // Arguments for test functions
-        // Storage for test results
-        std::vector<TestResult> results;   // Results from all tests
-        TestResult baseline;               // First test serves as baseline
-        bool first = true;                 // Track first test for baseline
+    void runAll(const char* dimensions, Args... args) {
+        current_test = 0;  // Reset counter before running tests
+        std::vector<TestResult> results;
+        TestResult baseline;
+        bool first = true;
 
-        // Run each registered test
         for (const auto& test : tests) {
-            if (!test.enabled) continue;   // Skip disabled tests
+            if (!test.enabled) continue;
 
-            // Run the test and store results
             PerfMetrics pm = test.run(args...);
-            TestResult result = {test.name, pm, true};
+            TestResult result = {test.name.c_str(), pm, true};
+            current_test++;  // Increment after each test
 
-            // First test becomes baseline
             if (first) {
                 baseline = result;
                 first = false;
             } else {
-                // Store other results for comparison
                 results.push_back(result);
             }
         }
@@ -588,13 +565,13 @@ public:
         if (cpu_result.valid) {
             // Include CPU comparison if CPU result is available
             printPerformanceSummary<CompareMode::VS_CPU>(
-                test_name, dimensions,
+                test_name.c_str(), dimensions,
                 results.data(), results.size(),
                 baseline, &cpu_result);
         } else {
             // Compare against baseline only
             printPerformanceSummary<CompareMode::BASE_ONLY>(
-                test_name, dimensions,
+                test_name.c_str(), dimensions,
                 results.data(), results.size(),
                 baseline);
         }
@@ -615,5 +592,13 @@ public:
             }, 
             true                          // Mark as valid result
         };
+    }
+
+    // Get name of current test
+    const char* getCurrentTestName() const {
+        if (current_test < tests.size()) {
+            return tests[current_test].name.c_str();
+        }
+        return "Unknown Test";
     }
 };
