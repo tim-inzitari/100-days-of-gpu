@@ -47,6 +47,58 @@ PerfMetrics runConvolutionTest(const float* h_input, const float* h_kernel, floa
     );
 }
 
+// First, create a CPU reference implementation for baseline results
+void conv2d_cpu_reference(const float* input, const float* kernel, float* output,
+                         int width, int height, int kernel_radius) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            float sum = 0.0f;
+            for (int ky = -kernel_radius; ky <= kernel_radius; ky++) {
+                for (int kx = -kernel_radius; kx <= kernel_radius; kx++) {
+                    int in_y = y + ky;
+                    int in_x = x + kx;
+                    if (in_y >= 0 && in_y < height && in_x >= 0 && in_x < width) {
+                        sum += input[in_y * width + in_x] * 
+                               kernel[(ky + kernel_radius) * (2*kernel_radius + 1) + 
+                                    (kx + kernel_radius)];
+                    }
+                }
+            }
+            output[y * width + x] = sum;
+        }
+    }
+}
+
+// Then in your main function or test harness:
+int main() {
+    // ... setup code ...
+    
+    // Allocate memory for results
+    float *h_output = (float*)malloc(width * height * sizeof(float));
+    float *h_output_cpu = (float*)malloc(width * height * sizeof(float));
+    
+    // Generate reference result
+    conv2d_cpu_reference(h_input, h_kernel, h_output_cpu, 
+                        width, height, kernel_radius);
+    
+    // Run GPU implementation
+    PerfMetrics pm = runConvolutionTest(h_input, h_kernel, h_output,
+                                      width, height, kernel_radius);
+    
+    // Validate results
+    const float tolerance = 1e-5f;  // Adjust based on precision requirements
+    checkResults(h_output_cpu,      // CPU reference result
+                h_output,           // GPU result to validate
+                width * height,     // Total number of elements
+                tolerance,          // Maximum allowed difference
+                "2D Convolution"    // Implementation name
+    );
+    
+    // ... cleanup code ...
+    free(h_output);
+    free(h_output_cpu);
+}
+
 
 
 

@@ -230,26 +230,101 @@ PerfMetrics runGpuTest(
 
 //------------------------------------------------------------------------------
 // Utility function to compare results between implementations
+//------------------------------------------------------------------------------
+// This function compares the output of different implementations against a baseline
+// to validate correctness and measure numerical accuracy. It's particularly useful
+// for comparing GPU implementations against CPU reference implementations or
+// comparing optimized versions against naive implementations.
+//
 // Parameters:
-//   baseline: Reference result to compare against
-//   test: Result to validate
-//   total_elements: Number of elements to compare
-//   tol: Maximum allowed difference between elements
-//   impl_name: Name of the implementation being tested
-// Returns: Maximum difference found between any pair of elements
+//   baseline: Reference result to compare against (usually from a verified implementation)
+//   test: Result to validate from the implementation being tested
+//   total_elements: Total number of elements to compare
+//   tol: Maximum allowed difference between elements (tolerance)
+//   impl_name: Optional name of the implementation being tested (for output)
+//
+// Returns:
+//   float: Maximum absolute difference found between any pair of elements
+//
+// Usage Example 1 - Matrix Multiplication:
+//   // After running CPU and GPU implementations
+//   const float tolerance = 1e-5f;
+//   size_t total_elements = M * N;
+//   checkResults(
+//       h_C_cpu,                              // CPU reference result
+//       h_C_gpu,                             // GPU implementation result
+//       total_elements,                      // M * N elements
+//       tolerance,                           // Maximum allowed difference
+//       "GPU Matrix Multiplication"          // Implementation name
+//   );
+//
+// Usage Example 2 - 2D Convolution:
+//   // After running reference and GPU implementations
+//   const float tolerance = 1e-5f;
+//   size_t total_elements = width * height;
+//   float max_diff = checkResults(
+//       h_output_cpu,                        // CPU reference result
+//       h_output_gpu,                        // GPU implementation result
+//       total_elements,                      // width * height elements
+//       tolerance,                           // Maximum allowed difference
+//       "2D Convolution GPU"                 // Implementation name
+//   );
+//   if (max_diff > tolerance) {
+//       printf("Warning: Large numerical differences detected\n");
+//   }
+//
+// Usage Example 3 - Comparing Different GPU Implementations:
+//   // Compare optimized implementation against naive baseline
+//   const float tolerance = 1e-5f;
+//   checkResults(
+//       h_output_baseline,                   // Naive GPU implementation
+//       h_output_optimized,                  // Optimized GPU implementation
+//       total_elements,                      // Number of elements
+//       tolerance,                           // Maximum allowed difference
+//       "Optimized GPU Implementation"       // Implementation name
+//   );
+//
+// Notes:
+//   - Uses absolute difference for comparison
+//   - Prints both implementation-specific message and general accuracy check
+//   - PASSED/FAILED status depends on provided tolerance
+//   - Higher tolerance might be needed for lower precision implementations
+//   - Common tolerance values:
+//     * 1e-5f for single precision (float)
+//     * 1e-12 for double precision
+//     * 1e-2f for half precision or tensor cores
+//   - Consider using higher tolerances when:
+//     * Working with large matrices/tensors
+//     * Using lower precision arithmetic
+//     * Implementing algorithms with known numerical instability
 //------------------------------------------------------------------------------
 template <typename T>
-float checkResults(const T* baseline, const T* test, int total_elements, float tol, const char* impl_name = nullptr) {
+float checkResults(const T* baseline,      // Reference implementation results
+                  const T* test,           // Test implementation results
+                  int total_elements,      // Number of elements to compare
+                  float tol,              // Maximum allowed difference
+                  const char* impl_name = nullptr)  // Optional implementation name
+{
+    // Track maximum difference found between baseline and test
     float max_diff = 0.0f;
+    
+    // Compare each element pair
     for (int i = 0; i < total_elements; i++) {
+        // Calculate absolute difference for current element
         float diff = fabs(float(baseline[i] - test[i]));
+        // Update max_diff if current difference is larger
         max_diff = max(max_diff, diff);
     }
     
+    // If implementation name provided, print implementation-specific message
     if (impl_name) {
         printf("%s: Accuracy (max diff: %e)\n", impl_name, max_diff);
     }
+    
+    // Print general accuracy check result
     printf("   Accuracy Check: %s (max diff: %e)\n", 
            max_diff <= tol ? "PASSED" : "FAILED", max_diff);
+    
+    // Return maximum difference for caller to use if needed
     return max_diff;
 }
