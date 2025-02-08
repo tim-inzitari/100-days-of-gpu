@@ -34,15 +34,16 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | AnkitTsj            | [Link](https://github.com/AnkitTsj/cuda_learning)                                           |                  |
 | AramBughdaryan      | [Link](https://github.com/AramBughdaryan/cuda)                                              | 🎖️               |
 | arcAman07           | [Link](https://github.com/arcAman07/100-Days-of-GPU-Programming)                            |                  |
-| aryagxr             | [Link](https://github.com/aryagxr/cuda)                                                     |                  |
+| aryagxr             | [Link](https://github.com/aryagxr/cuda)                                                     | 🎖️               |
 | ashwin3005          | [Link](https://github.com/ashwin3005/CUDA)                                                  |                  |
-| asrjy               | [Link](https://github.com/asrjy/gpu)                                                        |                  |
+| asrjy               | [Link](https://github.com/asrjy/gpu)                                                        | 🎖️               |
 | AyoubMDL            | [Link](https://github.com/AyoubMDL/cuda)                                                    |                  |
 | bhavyashahh         | [Link](https://github.com/bhavyashahh/nexus-ai/tree/main/projects/bhavya-100-days-of-cuda/) |                  |
 | binarycache         | [Link](https://github.com/binarycache/100-days-of-GPU)                                      |                  |
 | derekdeming         | [Link](https://github.com/derekdeming/tinyCuda)                                             |                  |
 | doudi25             | [Link](https://github.com/doudi25/Triton)                                                   |                  |
 | Firojpaudel         | [Link](https://github.com/Firojpaudel/100_days_of_CUDA)                                     | 🎖️               |
+| gauravparajuli      | [Link](https://github.com/gauravparajuli/100-days-of-cuda)                                  |                  |
 | harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU)                                 | 🎖️               |
 | jsmidt              | [Link](https://github.com/jsmidt/100-days-of-grind)                                         |                  |
 | johannn05           | [Link](https://github.com/johannn05/100DaysCUDA)                                            | 🎖️               |
@@ -78,6 +79,7 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | Udayk02             | [Link](https://github.com/Udayk02/cuda)                                                     |                  |
 | vectorquantized     | [Link](https://github.com/vectorquantized/100daysofcuda)                                    | 🎖️               |
 | ysurs               | [Link](https://github.com/ysurs/cuda-100-days)                                              |                  |
+| xl0                 | [Link](https://github.com/xl0/cuda-100/)                                                    |                  |
 | zmusaddique         | [Link](https://github.com/zmusaddique/100daysCUDA)                                          | 🎖️               |
 
 
@@ -89,6 +91,8 @@ Announce your repo in the Discord channel and we will verify if you actually del
 | Name                | Repository                                                  |
 | ------------------- | ------------------------------------------------------------|
 | AramBughdaryan      | [Link](https://github.com/AramBughdaryan/cuda)              |
+| aryagxr             | [Link](https://github.com/aryagxr/cuda)                     |
+| asrjy               | [Link](https://github.com/asrjy/gpu)                        |
 | Firojpaudel         | [Link](https://github.com/Firojpaudel/100_days_of_CUDA)     |
 | harshkumarchourasia | [Link](https://github.com/harshkumarchourasia/100DaysOfGPU) |
 | johannn05           | [Link](https://github.com/johannn05/100DaysCUDA/)           |
